@@ -229,4 +229,66 @@ error:
     return 0;
 }
 
+// Literal versions:
+
+ecs_entity_t ecs_import_literal(ecs_world_t *world, ecs_module_action_t module,
+								const char *path) {
+	ecs_entity_t old_scope = ecs_set_scope(world, 0);
+	const char *old_name_prefix = world->info.name_prefix;
+
+	ecs_entity_t e = ecs_lookup(world, path);
+
+	if (!e) {
+			ecs_trace("#[magenta]import#[reset] %s", path);
+			ecs_log_push();
+
+			module(world);
+
+			e = ecs_lookup(world, path);
+			ecs_check(e != 0, ECS_MODULE_UNDEFINED, "%s", path);
+
+			ecs_log_pop();
+	}
+
+	ecs_set_scope(world, old_scope);
+	world->info.name_prefix = old_name_prefix;
+	return e;
+
+	error:
+	  return 0;
+}
+
+ecs_entity_t ecs_literal_module_init(ecs_world_t *world, const char *named_path,
+									 const ecs_component_desc_t *desc) {
+	ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+	ecs_entity_t old_scope = ecs_set_scope(world, 0);
+	ecs_entity_t e = desc->entity;
+	if (!e) {
+			e = ecs_entity(world, {.name = named_path});
+			ecs_set_symbol(world, e, named_path);
+	} else if (!ecs_exists(world, e)) {
+			ecs_make_alive(world, e);
+			ecs_add_fullpath(world, e, named_path);
+			ecs_set_symbol(world, e, named_path);
+	}
+
+	ecs_add_id(world, e, EcsModule);
+
+	ecs_component_desc_t private_desc = *desc;
+	private_desc.entity = e;
+
+	if (desc->type.size) {
+			ecs_entity_t result = ecs_component_init(world, &private_desc);
+			ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+			ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
+			(void)result;
+	}
+
+	ecs_set_scope(world, old_scope);
+
+	return e;
+	error:
+	  return 0;
+}
+
 #endif

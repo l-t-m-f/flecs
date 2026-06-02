@@ -100,6 +100,10 @@ ecs_entity_t ecs_module_init(
     const char *c_name,
     const ecs_component_desc_t *desc);
 
+// Literal:
+ecs_entity_t ecs_import_literal (ecs_world_t *world, ecs_module_action_t module, const char *path);
+ecs_entity_t ecs_literal_module_init (ecs_world_t *world, const char *named_path, const ecs_component_desc_t *desc);
+
 /** Define module. */
 #define ECS_MODULE_DEFINE(world, id)\
     {\
@@ -123,6 +127,23 @@ ecs_entity_t ecs_module_init(
  * @endcode
  */
 #define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id)
+
+// Literal:
+
+#define ECS_LITERAL_MODULE_DEFINE(world, id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+		ecs_component_desc_t desc = {0};                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+		desc.entity				  = ecs_id (id);                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+		ecs_id (id)				  = ecs_literal_module_init (world, #id, &desc);                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+		ecs_set_scope (world, ecs_id (id));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	}
+
+#define ECS_LITERAL_MODULE(world, id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	ecs_entity_t ecs_id (id) = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+	ECS_LITERAL_MODULE_DEFINE (world, id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+	(void)ecs_id (id)
+
+#define ECS_LITERAL_IMPORT(world, id) ecs_import_literal (world, id##Import, #id)
 
 #ifdef __cplusplus
 }
