@@ -14,6 +14,7 @@
         "testsuites": [{
             "id": "Id",
             "testcases": [
+                "long_entity_from_str",
                 "0_is_wildcard",
                 "wildcard_is_wildcard",
                 "any_is_wildcard",
@@ -1016,7 +1017,10 @@
                 "defer_reparent_mixed_childof",
                 "prefab_parent_w_mixed_childof",
                 "instantiate_tree_after_add_child",
-                "set_parent_w_childof_observer_and_wildcard_event_observer"
+                "set_parent_w_childof_observer_and_wildcard_event_observer",
+                "prefab_get_target_after_delete_instance_child",
+                "defer_remove_add_batched_w_sibling_in_table",
+                "instantiate_tree_after_rename_child"
             ]
         }, {
             "id": "Hierarchies",
@@ -1230,6 +1234,7 @@
             "id": "Get_component",
             "setup": true,
             "testcases": [
+                "get_inherited_tag_w_isa",
                 "get_empty",
                 "get_1_from_1",
                 "get_1_from_2",
@@ -1786,6 +1791,7 @@
         }, {
             "id": "Pairs",
             "testcases": [
+                "disable_toggle_component_and_toggle_pair",
                 "type_w_one_pair",
                 "type_w_two_pairs",
                 "add_pair",
@@ -2522,6 +2528,7 @@
             "id": "Prefab",
             "setup": true,
             "testcases": [
+                "enable_prefab_w_isa_variant",
                 "new_w_prefab",
                 "new_w_count_prefab",
                 "new_w_type_w_prefab",
@@ -3067,6 +3074,7 @@
         }, {
             "id": "Commands",
             "testcases": [
+                "defer_ensure_dont_fragment_w_set",
                 "is_deferred",
                 "is_defer_suspended",
                 "defer_new",

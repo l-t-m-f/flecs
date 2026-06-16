@@ -7872,8 +7872,7 @@ ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
 /** Create new entity with (component) ID.
- * This operation creates a new entity with an optional (component) ID. When 0
- * is passed to the ID parameter, no component is added to the new entity.
+ * This operation creates a new entity with an optional (component) ID.
  *
  * @param world The world.
  * @param component The component to create the new entity with.
@@ -16919,6 +16918,8 @@ typedef struct ecs_script_eval_desc_t {
 /** Used to capture error output from script evaluation. */
 typedef struct ecs_script_eval_result_t {
     char *error;       /**< Error message, or NULL if no error. Must be freed by the application. */
+    int32_t line;      /**< Line number (1-based) of first error, or 0 if not available. */
+    int32_t column;    /**< Column number (1-based) of first error, or 0 if not available. */
 } ecs_script_eval_result_t;
 
 /** Parse script.

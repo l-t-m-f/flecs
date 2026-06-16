@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "../script.h"
+#include <inttypes.h>
 
 typedef struct ecs_script_eval_ctx_t {
     const ecs_script_t *script;
@@ -854,6 +855,20 @@ int flecs_expr_element_visit_eval(
 
     int64_t index_value = *(int64_t*)index->value.ptr;
 
+    int64_t elem_count = node->elem_count;
+    if (!elem_count) {
+        if (ecs_get(ctx->world, expr->value.type, EcsVector) != NULL) {
+            elem_count = ecs_vec_count(expr->value.ptr);
+        }
+    }
+
+    if (index_value < 0 || index_value >= elem_count) {
+        flecs_expr_visit_error(ctx->script, node,
+            "index %" PRId64 " is out of range for collection (count = %"
+                PRId64 ")", index_value, elem_count);
+        goto error;
+    }
+
     out->value.ptr = ECS_OFFSET(expr->value.ptr, node->elem_size * index_value);
     out->value.type = node->node.type;
     out->owned = false;
@@ -939,6 +954,12 @@ int flecs_expr_new_visit_eval(
     ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
     ecs_script_eval_visitor_t temp_v = {0};
     ecs_script_eval_desc_t desc = {0};
+
+    if (v && v->template) {
+        *(ecs_entity_t*)out->value.ptr = 0;
+        out->value.type = ecs_id(ecs_entity_t);
+        return 0;
+    }
 
     if (!v) {
         /* Safe const cast, script won't modify variables since it only contains 

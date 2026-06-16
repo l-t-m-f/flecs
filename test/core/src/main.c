@@ -9,6 +9,7 @@
 #include <core.h>
 
 // Testsuite 'Id'
+void Id_long_entity_from_str(void);
 void Id_0_is_wildcard(void);
 void Id_wildcard_is_wildcard(void);
 void Id_any_is_wildcard(void);
@@ -985,6 +986,9 @@ void NonFragmentingChildOf_defer_reparent_mixed_childof(void);
 void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void);
 void NonFragmentingChildOf_instantiate_tree_after_add_child(void);
 void NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_observer(void);
+void NonFragmentingChildOf_prefab_get_target_after_delete_instance_child(void);
+void NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table(void);
+void NonFragmentingChildOf_instantiate_tree_after_rename_child(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -1188,6 +1192,7 @@ void Count_count_prefab(void);
 
 // Testsuite 'Get_component'
 void Get_component_setup(void);
+void Get_component_get_inherited_tag_w_isa(void);
 void Get_component_get_empty(void);
 void Get_component_get_1_from_1(void);
 void Get_component_get_1_from_2(void);
@@ -1723,6 +1728,7 @@ void ComponentLifecycle_add_on_set_hook_while_in_use(void);
 void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void);
 
 // Testsuite 'Pairs'
+void Pairs_disable_toggle_component_and_toggle_pair(void);
 void Pairs_type_w_one_pair(void);
 void Pairs_type_w_two_pairs(void);
 void Pairs_add_pair(void);
@@ -2443,6 +2449,7 @@ void Monitor_yield_existing(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
+void Prefab_enable_prefab_w_isa_variant(void);
 void Prefab_new_w_prefab(void);
 void Prefab_new_w_count_prefab(void);
 void Prefab_new_w_type_w_prefab(void);
@@ -2978,6 +2985,7 @@ void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
 
 // Testsuite 'Commands'
+void Commands_defer_ensure_dont_fragment_w_set(void);
 void Commands_is_deferred(void);
 void Commands_is_defer_suspended(void);
 void Commands_defer_new(void);
@@ -3353,6 +3361,10 @@ void StackAlloc_init_fini(void);
 void StackAlloc_multiple_overlapping_cursors(void);
 
 bake_test_case Id_testcases[] = {
+    {
+        "long_entity_from_str",
+        Id_long_entity_from_str
+    },
     {
         "0_is_wildcard",
         Id_0_is_wildcard
@@ -7188,6 +7200,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "set_parent_w_childof_observer_and_wildcard_event_observer",
         NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_observer
+    },
+    {
+        "prefab_get_target_after_delete_instance_child",
+        NonFragmentingChildOf_prefab_get_target_after_delete_instance_child
+    },
+    {
+        "defer_remove_add_batched_w_sibling_in_table",
+        NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table
+    },
+    {
+        "instantiate_tree_after_rename_child",
+        NonFragmentingChildOf_instantiate_tree_after_rename_child
     }
 };
 
@@ -7968,6 +7992,10 @@ bake_test_case Count_testcases[] = {
 };
 
 bake_test_case Get_component_testcases[] = {
+    {
+        "get_inherited_tag_w_isa",
+        Get_component_get_inherited_tag_w_isa
+    },
     {
         "get_empty",
         Get_component_get_empty
@@ -10042,6 +10070,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
 };
 
 bake_test_case Pairs_testcases[] = {
+    {
+        "disable_toggle_component_and_toggle_pair",
+        Pairs_disable_toggle_component_and_toggle_pair
+    },
     {
         "type_w_one_pair",
         Pairs_type_w_one_pair
@@ -12875,6 +12907,10 @@ bake_test_case Monitor_testcases[] = {
 
 bake_test_case Prefab_testcases[] = {
     {
+        "enable_prefab_w_isa_variant",
+        Prefab_enable_prefab_w_isa_variant
+    },
+    {
         "new_w_prefab",
         Prefab_new_w_prefab
     },
@@ -14982,6 +15018,10 @@ bake_test_case Type_testcases[] = {
 
 bake_test_case Commands_testcases[] = {
     {
+        "defer_ensure_dont_fragment_w_set",
+        Commands_defer_ensure_dont_fragment_w_set
+    },
+    {
         "is_deferred",
         Commands_is_deferred
     },
@@ -16434,7 +16474,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        78,
+        79,
         Id_testcases
     },
     {
@@ -16520,7 +16560,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        258,
+        261,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16555,7 +16595,7 @@ static bake_test_suite suites[] = {
         "Get_component",
         Get_component_setup,
         NULL,
-        14,
+        15,
         Get_component_testcases
     },
     {
@@ -16625,7 +16665,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        139,
+        140,
         Pairs_testcases
     },
     {
@@ -16681,7 +16721,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        203,
+        204,
         Prefab_testcases
     },
     {
@@ -16716,7 +16756,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        177,
+        178,
         Commands_testcases
     },
     {
