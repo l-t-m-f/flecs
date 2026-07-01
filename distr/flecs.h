@@ -29,7 +29,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 6  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -236,6 +236,7 @@
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
 #define FLECS_SCRIPT         /**< Flecs entity notation language. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
+// #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
 #define FLECS_TIMER          /**< Timer support. */
@@ -597,10 +598,12 @@ extern "C" {
 #define EcsTableOverrideDontFragment   (1u << 23u)
 #define EcsTableHasOrderedChildren     (1u << 24u)
 #define EcsTableHasOverrides           (1u << 25u)
+#define EcsTableEmpty                  (1u << 26u) /* Does the table have no entities. */
 
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableEdgeReparent           (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 29u)
+#define EcsTableNotEmpty               (1u << 30u) /* Does the table have entities. */
 
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
@@ -4746,11 +4749,20 @@ typedef struct ecs_worker_iter_t {
     int32_t count;
 } ecs_worker_iter_t;
 
+/* Inlined element stored in a table cache. */
+typedef struct ecs_table_cache_elem_t {
+    ecs_table_t *table;                            /* Table associated with element */
+    ecs_table_record_t *tr;                        /* Table record for element */
+    int16_t column;                                /* Column for the table record */
+    int16_t index;                                 /* Index of element in table cache */
+} ecs_table_cache_elem_t;
+
 /* Convenience struct to iterate a table array for an ID. */
 typedef struct ecs_table_cache_iter_t {
-    const struct ecs_table_cache_hdr_t *cur, *next;
-    bool iter_fill;
-    bool iter_empty;
+    const ecs_table_cache_elem_t *elems;           /* Pointer into elements array */
+    int32_t remaining;                             /* Elements left to scan */
+    const ecs_table_cache_elem_t *cur;             /* Most recently returned element */
+    ecs_flags32_t flags;                           /* Table flags to match (EcsTableEmpty, EcsTableNotEmpty) */
 } ecs_table_cache_iter_t;
 
 /** Each iterator. */
@@ -5516,7 +5528,6 @@ struct ecs_record_t {
 typedef struct ecs_table_cache_hdr_t {
     struct ecs_component_record_t *cr;         /**< Component record for component. */
     ecs_table_t *table;                        /**< Table associated with element. */
-    struct ecs_table_cache_hdr_t *prev, *next; /**< Previous and next elements for ID in table cache. */
 } ecs_table_cache_hdr_t;
 
 /** Record that stores the location of a component in a table.
@@ -12518,6 +12529,9 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_SCRIPT_MATH
 #undef FLECS_SCRIPT_MATH
 #endif
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#undef FLECS_SCRIPT_PLATFORM
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -16716,6 +16730,55 @@ typedef struct {
  */
 FLECS_API
 void FlecsScriptMathImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/** @} */
+
+#endif
+
+#endif
+
+#ifdef FLECS_SCRIPT_PLATFORM
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#error "FLECS_NO_SCRIPT_PLATFORM failed: SCRIPT_PLATFORM is required by other addons"
+#endif
+
+#ifdef FLECS_SCRIPT_PLATFORM
+
+#ifndef FLECS_SCRIPT
+#define FLECS_SCRIPT
+#endif
+
+/**
+ * @defgroup c_addons_script_platform Script Platform
+ * @ingroup c_addons
+ * Platform constants for Flecs script.
+ * @{
+ */
+
+#ifndef FLECS_SCRIPT_PLATFORM_H
+#define FLECS_SCRIPT_PLATFORM_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Script platform import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsScriptPlatform)
+ * @endcode
+ *
+ * @param world The world.
+ */
+FLECS_API
+void FlecsScriptPlatformImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus
@@ -24429,8 +24492,6 @@ inline uint32_t get_generation(flecs::entity_t e) {
     return ECS_GENERATION(e);
 }
 
-struct scoped_world;
-
 /**
  * @defgroup cpp_world World
  * @ingroup cpp_core
@@ -25434,16 +25495,6 @@ struct world {
         scope(parent, func);
     }
 
-    /** Use the provided scope for operations run on the returned world.
-     * Operations need to be run in a single statement.
-     */
-    flecs::scoped_world scope(id_t parent) const;
-
-    template <typename T>
-    flecs::scoped_world scope() const;
-
-    flecs::scoped_world scope(const char* name) const;
-
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {
         ecs_delete_with(world_, the_id);
@@ -26374,37 +26425,6 @@ public:
     void init_builtin_components();
 
     world_t *world_; /**< Pointer to the underlying C world. */
-};
-
-/** Scoped world.
- * Utility class used by the world::scope() method to create entities in a scope.
- */
-struct scoped_world : world {
-    /** Create a scoped world.
-     *
-     * @param w The world.
-     * @param s The scope entity.
-     */
-    scoped_world(
-        flecs::world_t *w,
-        flecs::entity_t s) : world(w)
-    {
-        prev_scope_ = ecs_set_scope(w, s);
-    }
-
-    /** Destructor. Restores the previous scope. */
-    ~scoped_world() {
-        ecs_set_scope(world_, prev_scope_);
-    }
-
-    /** Copy constructor. */
-    scoped_world(const scoped_world& obj) : world(nullptr) {
-        prev_scope_ = obj.prev_scope_;
-        world_ = obj.world_;
-        flecs_poly_claim(world_);
-    }
-
-    flecs::entity_t prev_scope_; /**< The previous scope entity. */
 };
 
 /** @} */
@@ -30046,11 +30066,6 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Return a world scoped to the entity. */
-    scoped_world scope() const {
-        return scoped_world(world_, id_);
-    }
-
     /** Set the entity name. */
     const Self& set_name(const char *name) const  {
         ecs_set_name(this->world_, this->id_, name);
@@ -30796,30 +30811,6 @@ struct entity : entity_builder<entity>
      */
     void destruct() const {
         ecs_delete(world_, id_);
-    }
-
-    /** Create a child entity with a specified relationship.
-     *
-     * @param r The relationship to use (defaults to ChildOf).
-     * @param args Additional arguments forwarded to entity creation.
-     * @return The created child entity.
-     */
-    template <typename ... Args>
-    flecs::entity child(flecs::entity_t r = flecs::ChildOf, Args&&... args) {
-        flecs::world world(world_);
-        return world.entity(FLECS_FWD(args)...).add(r, id_);
-    }
-
-    /** Create a child entity with a typed relationship.
-     *
-     * @tparam R The relationship type.
-     * @param args Additional arguments forwarded to entity creation.
-     * @return The created child entity.
-     */
-    template <typename R, typename ... Args>
-    flecs::entity child(Args&&... args) {
-        flecs::world world(world_);
-        return world.entity(FLECS_FWD(args)...).add(_::type<R>::id(world_), id_);
     }
 
     /** Set child order.
@@ -32411,11 +32402,11 @@ untyped_component& member(
 }
 
 /** Add a member using pointer-to-member. */
-template <typename MemberType, typename ComponentType, 
+template <typename MemberType, typename ComponentType,
     typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(
-    const char* name, 
-    const MemberType ComponentType::* ptr) 
+    const MemberType ComponentType::* ptr,
+    const char* name)
 {
     flecs::entity_t type_id = _::type<RealType>::id(world_);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
@@ -32423,12 +32414,12 @@ untyped_component& member(
 }
 
 /** Add a member with unit using pointer-to-member. */
-template <typename MemberType, typename ComponentType, 
+template <typename MemberType, typename ComponentType,
     typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(
-    flecs::entity_t unit, 
-    const char* name, 
-    const MemberType ComponentType::* ptr) 
+    const MemberType ComponentType::* ptr,
+    const char* name,
+    flecs::entity_t unit)
 {
     flecs::entity_t type_id = _::type<RealType>::id(world_);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
@@ -32436,11 +32427,11 @@ untyped_component& member(
 }
 
 /** Add a member with unit using pointer-to-member. */
-template <typename UnitType, typename MemberType, typename ComponentType, 
+template <typename UnitType, typename MemberType, typename ComponentType,
     typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(
-    const char* name, 
-    const MemberType ComponentType::* ptr) 
+    const MemberType ComponentType::* ptr,
+    const char* name)
 {
     flecs::entity_t type_id = _::type<RealType>::id(world_);
     flecs::entity_t unit_id = _::type<UnitType>::id(world_);
@@ -35788,12 +35779,24 @@ public:
         , desc_{}
         , world_(world)
     {
-        ecs_entity_desc_t entity_desc = {};
-        entity_desc.name = name;
-        entity_desc.sep = "::";
-        entity_desc.root_sep = "::";
-        desc_.entity = ecs_entity_init(world_, &entity_desc);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
+            desc_.entity = ecs_entity_init(world_, &entity_desc);
+        }
     }
+
+    node_builder(const node_builder& f)
+        : IBase(&desc_, f.term_index_)
+    {
+        world_ = f.world_;
+        desc_ = f.desc_;
+    }
+
+    node_builder(node_builder&& f) noexcept
+        : node_builder<T, TDesc, Base, IBuilder, Components...>(f) { }
 
     template <typename Func>
     T run(Func&& func) {
@@ -35870,8 +35873,8 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
         , event_count_(0) { }
 
     /** Construct from an observer descriptor. */
-    observer_builder_i(ecs_observer_desc_t *desc)
-        : BaseClass(&desc->query)
+    observer_builder_i(ecs_observer_desc_t *desc, int32_t term_index = 0)
+        : BaseClass(&desc->query, term_index)
         , desc_(desc)
         , event_count_(0) { }
 
@@ -36314,8 +36317,8 @@ private:
     using BaseClass = query_builder_i<Base, Components ...>;
 
 public:
-    system_builder_i(ecs_system_desc_t *desc) 
-        : BaseClass(&desc->query)
+    system_builder_i(ecs_system_desc_t *desc, int32_t term_index = 0)
+        : BaseClass(&desc->query, term_index)
         , desc_(desc) { }
 
     /** Specify in which phase the system should run.
@@ -36323,16 +36326,7 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        flecs::entity_t cur_phase = ecs_get_target(
-            world_v(), desc_->entity, EcsDependsOn, 0);
-        if (cur_phase) {
-            ecs_remove_id(world_v(), desc_->entity, ecs_dependson(cur_phase));
-            ecs_remove_id(world_v(), desc_->entity, cur_phase);
-        }
-        if (phase) {
-            ecs_add_id(world_v(), desc_->entity, ecs_dependson(phase));
-            ecs_add_id(world_v(), desc_->entity, phase);
-        }
+        desc_->phase = phase;
         return *this;
     }
 
@@ -36479,8 +36473,7 @@ struct system_builder final : _::system_builder_base<Components...> {
         _::sig<Components...>(world).populate(this);
 
 #ifdef FLECS_PIPELINE
-        ecs_add_id(world, this->desc_.entity, ecs_dependson(flecs::OnUpdate));
-        ecs_add_id(world, this->desc_.entity, flecs::OnUpdate);
+        this->desc_.phase = flecs::OnUpdate;
 #endif
     }
 
@@ -37765,15 +37758,15 @@ inline untyped_component& untyped_component::metric(
         const char *component_name = e.name();
         if (!metric_name) {
             if (ecs_os_strcmp(m->name, "value") || !component_name) {
-                metric_entity = w.scope(parent).entity(m->name);
+                metric_entity = w.entity(parent, m->name);
             } else {
                 // If name of member is "value", use name of type.
                 char *snake_name = flecs_to_snake_case(component_name);
-                metric_entity = w.scope(parent).entity(snake_name);
+                metric_entity = w.entity(parent, snake_name);
                 ecs_os_free(snake_name);
             }
         } else {
-            metric_entity = w.scope(parent).entity(metric_name);
+            metric_entity = w.entity(parent, metric_name);
         }
     }
 
@@ -38905,25 +38898,6 @@ inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
     return entity(static_cast<underlying_type_t<E>>(value));
-}
-
-/** Use the provided scope for operations run on the returned world.
- * Operations need to be run in a single statement.
- */
-inline flecs::scoped_world world::scope(id_t parent) const {
-    return scoped_world(world_, parent);
-}
-
-/** Use the provided scope (by type) for operations run on the returned world. */
-template <typename T>
-inline flecs::scoped_world world::scope() const {
-    flecs::id_t parent = _::type<T>::id(world_);
-    return scoped_world(world_, parent);
-}
-
-/** Use the provided scope (by name) for operations run on the returned world. */
-inline flecs::scoped_world world::scope(const char* name) const {
-  return scope(entity(name));
 }
 
 } // namespace flecs

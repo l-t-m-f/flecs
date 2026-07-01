@@ -57,6 +57,7 @@ void Id_unresolved_pair_from_str(void);
 void Id_wildcard_pair_from_str(void);
 void Id_any_pair_from_str(void);
 void Id_invalid_pair(void);
+void Id_pair_from_str_too_many_args(void);
 void Id_value_pair_is_wildcard(void);
 void Id_value_pair_w_rel_wildcard_is_wildcard(void);
 void Id_value_pair_w_obj_wildcard_is_wildcard(void);
@@ -726,6 +727,7 @@ void Sparse_defer_remove_add_override(void);
 void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 void Sparse_remove_childof_pair_w_dont_fragment_component(void);
 void Sparse_remove_zeroes_storage(void);
+void Sparse_instantiate_prefab_w_tag_on_add_observer(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -989,6 +991,7 @@ void NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_obse
 void NonFragmentingChildOf_prefab_get_target_after_delete_instance_child(void);
 void NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table(void);
 void NonFragmentingChildOf_instantiate_tree_after_rename_child(void);
+void NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -1400,6 +1403,8 @@ void OnDelete_delete_with_1(void);
 void OnDelete_delete_with_2(void);
 void OnDelete_delete_with_3(void);
 void OnDelete_empty_after_remove(void);
+void OnDelete_remove_target_no_intermediate_table(void);
+void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -2140,6 +2145,11 @@ void Observer_query_eval_w_pair_first_var_that_triggered_observer(void);
 void Observer_query_eval_w_pair_second_var_that_triggered_observer(void);
 void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void);
 void Observer_observer_w_2_fixed_src(void);
+void Observer_1_term_wildcard_batched(void);
+void Observer_2_terms_wildcard_batched(void);
+void Observer_1_term_var_batched(void);
+void Observer_2_terms_var_batched(void);
+void Observer_2_terms_var_src_w_trait_batched(void);
 void Observer_emit_for_recreated_id_after_remove_all(void);
 void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
 void Observer_emit_for_recreated_id_after_delete_with(void);
@@ -2336,6 +2346,8 @@ void Observer_cache_test_16(void);
 void Observer_cache_test_17(void);
 void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void);
 void Observer_propagate_isa_two_bases_dirty_reachable_cache(void);
+void Observer_propagate_on_set_2_lvls(void);
+void Observer_propagate_on_set_2_lvls_2_terms(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -3166,6 +3178,8 @@ void Commands_set_existing_after_remove_w_is_a_move_table(void);
 void Commands_set_existing_after_remove_2_stages(void);
 void Commands_on_replace_w_set_batched_grow_table_in_hook(void);
 void Commands_defer_batched_add_after_delete(void);
+void Commands_defer_add_remove_childof_w_dont_fragment(void);
+void Commands_defer_remove_dont_fragment_on_cascade_deleted_child(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -3289,6 +3303,13 @@ void Table_clear_table_on_remove_observer(void);
 void Table_65_records_w_tgt(void);
 void Table_find_w_dont_fragment(void);
 void Table_clear_table_toggle_reset(void);
+void Table_empty_flag_new(void);
+void Table_empty_flag_new_w_id(void);
+void Table_empty_flag_delete(void);
+void Table_empty_flag_clear(void);
+void Table_empty_flag_bulk_init(void);
+void Table_empty_flag_table_clear(void);
+void Table_empty_flag_on_delete_delete_children(void);
 
 // Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
@@ -3555,6 +3576,10 @@ bake_test_case Id_testcases[] = {
     {
         "invalid_pair",
         Id_invalid_pair
+    },
+    {
+        "pair_from_str_too_many_args",
+        Id_pair_from_str_too_many_args
     },
     {
         "value_pair_is_wildcard",
@@ -6168,6 +6193,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "remove_zeroes_storage",
         Sparse_remove_zeroes_storage
+    },
+    {
+        "instantiate_prefab_w_tag_on_add_observer",
+        Sparse_instantiate_prefab_w_tag_on_add_observer
     }
 };
 
@@ -7215,6 +7244,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_after_rename_child",
         NonFragmentingChildOf_instantiate_tree_after_rename_child
+    },
+    {
+        "fini_w_instantiated_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child
     }
 };
 
@@ -8803,6 +8836,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "empty_after_remove",
         OnDelete_empty_after_remove
+    },
+    {
+        "remove_target_no_intermediate_table",
+        OnDelete_remove_target_no_intermediate_table
+    },
+    {
+        "remove_target_no_intermediate_table_3_pairs",
+        OnDelete_remove_target_no_intermediate_table_3_pairs
     }
 };
 
@@ -11712,6 +11753,26 @@ bake_test_case Observer_testcases[] = {
         Observer_observer_w_2_fixed_src
     },
     {
+        "1_term_wildcard_batched",
+        Observer_1_term_wildcard_batched
+    },
+    {
+        "2_terms_wildcard_batched",
+        Observer_2_terms_wildcard_batched
+    },
+    {
+        "1_term_var_batched",
+        Observer_1_term_var_batched
+    },
+    {
+        "2_terms_var_batched",
+        Observer_2_terms_var_batched
+    },
+    {
+        "2_terms_var_src_w_trait_batched",
+        Observer_2_terms_var_src_w_trait_batched
+    },
+    {
         "emit_for_recreated_id_after_remove_all",
         Observer_emit_for_recreated_id_after_remove_all
     },
@@ -12494,6 +12555,14 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_isa_two_bases_dirty_reachable_cache",
         Observer_propagate_isa_two_bases_dirty_reachable_cache
+    },
+    {
+        "propagate_on_set_2_lvls",
+        Observer_propagate_on_set_2_lvls
+    },
+    {
+        "propagate_on_set_2_lvls_2_terms",
+        Observer_propagate_on_set_2_lvls_2_terms
     }
 };
 
@@ -15743,6 +15812,14 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_batched_add_after_delete",
         Commands_defer_batched_add_after_delete
+    },
+    {
+        "defer_add_remove_childof_w_dont_fragment",
+        Commands_defer_add_remove_childof_w_dont_fragment
+    },
+    {
+        "defer_remove_dont_fragment_on_cascade_deleted_child",
+        Commands_defer_remove_dont_fragment_on_cascade_deleted_child
     }
 };
 
@@ -16212,6 +16289,34 @@ bake_test_case Table_testcases[] = {
     {
         "clear_table_toggle_reset",
         Table_clear_table_toggle_reset
+    },
+    {
+        "empty_flag_new",
+        Table_empty_flag_new
+    },
+    {
+        "empty_flag_new_w_id",
+        Table_empty_flag_new_w_id
+    },
+    {
+        "empty_flag_delete",
+        Table_empty_flag_delete
+    },
+    {
+        "empty_flag_clear",
+        Table_empty_flag_clear
+    },
+    {
+        "empty_flag_bulk_init",
+        Table_empty_flag_bulk_init
+    },
+    {
+        "empty_flag_table_clear",
+        Table_empty_flag_table_clear
+    },
+    {
+        "empty_flag_on_delete_delete_children",
+        Table_empty_flag_on_delete_delete_children
     }
 };
 
@@ -16489,7 +16594,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        79,
+        80,
         Id_testcases
     },
     {
@@ -16566,7 +16671,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        231,
+        232,
         Sparse_testcases,
         1,
         Sparse_params
@@ -16575,7 +16680,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        261,
+        262,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16631,7 +16736,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        127,
+        129,
         OnDelete_testcases
     },
     {
@@ -16694,7 +16799,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        344,
+        351,
         Observer_testcases
     },
     {
@@ -16771,7 +16876,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        178,
+        180,
         Commands_testcases
     },
     {
@@ -16792,7 +16897,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        34,
+        41,
         Table_testcases
     },
     {

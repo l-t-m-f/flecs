@@ -62,6 +62,7 @@
                 "wildcard_pair_from_str",
                 "any_pair_from_str",
                 "invalid_pair",
+                "pair_from_str_too_many_args",
                 "value_pair_is_wildcard",
                 "value_pair_w_rel_wildcard_is_wildcard",
                 "value_pair_w_obj_wildcard_is_wildcard",
@@ -755,7 +756,8 @@
                 "defer_remove_add_override",
                 "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
                 "remove_childof_pair_w_dont_fragment_component",
-                "remove_zeroes_storage"
+                "remove_zeroes_storage",
+                "instantiate_prefab_w_tag_on_add_observer"
             ]
         }, {
             "id": "NonFragmentingChildOf",
@@ -1020,7 +1022,8 @@
                 "set_parent_w_childof_observer_and_wildcard_event_observer",
                 "prefab_get_target_after_delete_instance_child",
                 "defer_remove_add_batched_w_sibling_in_table",
-                "instantiate_tree_after_rename_child"
+                "instantiate_tree_after_rename_child",
+                "fini_w_instantiated_prefab_non_fragmenting_child"
             ]
         }, {
             "id": "Hierarchies",
@@ -1447,7 +1450,9 @@
                 "delete_with_1",
                 "delete_with_2",
                 "delete_with_3",
-                "empty_after_remove"
+                "empty_after_remove",
+                "remove_target_no_intermediate_table",
+                "remove_target_no_intermediate_table_3_pairs"
             ]
         }, {
             "id": "Set",
@@ -2207,6 +2212,11 @@
                 "query_eval_w_pair_second_var_that_triggered_observer",
                 "query_eval_w_pair_both_vars_that_triggered_observer",
                 "observer_w_2_fixed_src",
+                "1_term_wildcard_batched",
+                "2_terms_wildcard_batched",
+                "1_term_var_batched",
+                "2_terms_var_batched",
+                "2_terms_var_src_w_trait_batched",
                 "emit_for_recreated_id_after_remove_all",
                 "emit_for_recreated_id_after_remove_all_wildcard",
                 "emit_for_recreated_id_after_delete_with",
@@ -2402,7 +2412,9 @@
                 "cache_test_16",
                 "cache_test_17",
                 "multi_term_on_set_w_base_and_3_instances_in_different_tables",
-                "propagate_isa_two_bases_dirty_reachable_cache"
+                "propagate_isa_two_bases_dirty_reachable_cache",
+                "propagate_on_set_2_lvls",
+                "propagate_on_set_2_lvls_2_terms"
             ]
         }, {
             "id": "ObserverOnSet",
@@ -3254,7 +3266,9 @@
                 "set_existing_after_remove_w_is_a_move_table",
                 "set_existing_after_remove_2_stages",
                 "on_replace_w_set_batched_grow_table_in_hook",
-                "defer_batched_add_after_delete"
+                "defer_batched_add_after_delete",
+                "defer_add_remove_childof_w_dont_fragment",
+                "defer_remove_dont_fragment_on_cascade_deleted_child"
             ]
         }, {
             "id": "SingleThreadStaging",
@@ -3383,7 +3397,14 @@
                 "clear_table_on_remove_observer",
                 "65_records_w_tgt",
                 "find_w_dont_fragment",
-                "clear_table_toggle_reset"
+                "clear_table_toggle_reset",
+                "empty_flag_new",
+                "empty_flag_new_w_id",
+                "empty_flag_delete",
+                "empty_flag_clear",
+                "empty_flag_bulk_init",
+                "empty_flag_table_clear",
+                "empty_flag_on_delete_delete_children"
             ]
         }, {
             "id": "Poly",

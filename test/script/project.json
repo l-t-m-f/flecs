@@ -564,6 +564,8 @@
                 "fn_in_module",
                 "fn_in_module_qualified_call",
                 "fn_in_module_w_using",
+                "fn_in_namespace_called_from_fn_w_using",
+                "fn_in_nested_namespace_called_from_fn_w_using",
                 "f32_arg_and_return",
                 "f64_arg_and_return",
                 "bool_arg_and_return",
@@ -678,7 +680,8 @@
                 "default_component_w_prop_var",
                 "default_component_w_prop_var_in_nested_if",
                 "default_component_w_prop_var_in_nested_for",
-                "template_w_new_expr_in_const"
+                "template_w_new_expr_in_const",
+                "template_w_existing_observer"
             ]
         }, {
             "id": "Error",

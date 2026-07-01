@@ -302,7 +302,7 @@ void flecs_emit_propagate_id_for_range(
         }
     }
 
-    if (!table->_->traversable_count) {
+    if (!table->_->traversable_count || owned) {
         return;
     }
 
@@ -356,13 +356,14 @@ void flecs_emit_propagate_id(
         return;
     }
 
-    if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+    if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
         return;
     }
 
-    const ecs_table_record_t *tr;
+    const ecs_table_cache_elem_t *elem;
     int32_t event_cur = it->event_cur;
-    while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
+    while ((elem = flecs_table_cache_next(&idt))) {
+        const ecs_table_record_t *tr = elem->tr;
         ecs_table_t *table = tr->hdr.table;
         if (!ecs_table_count(table)) {
             continue;
@@ -457,12 +458,13 @@ void flecs_emit_propagate_invalidate_tables(
         }
 
         ecs_table_cache_iter_t idt;
-        if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+        if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
             continue;
         }
 
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&idt))) {
+            const ecs_table_record_t *tr = elem->tr;
             ecs_table_t *table = tr->hdr.table;
             if (!table->_->traversable_count) {
                 continue;
@@ -1471,7 +1473,7 @@ repeat_event:
             ider_count = flecs_event_observers_get(er, id, iders);
         }
 
-        if (!ider_count && !(can_override_on_add || can_override_on_remove)) {
+        if (!ider_count) {
             /* If nothing more to do for this id, early out */
             continue;
         }

@@ -294,10 +294,10 @@ void flecs_component_ordered_children_init(
     flecs_ordered_children_init(world, cr);
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_all_iter(&cr->cache, &it)) {
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            tr->hdr.table->flags |= EcsTableHasOrderedChildren;
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty)) {
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&it))) {
+            elem->table->flags |= EcsTableHasOrderedChildren;
         }
     }
 }
@@ -848,25 +848,20 @@ bool flecs_component_release_tables(
 {
     bool remaining = false;
 
-    ecs_table_cache_iter_t it;
-    if (flecs_table_cache_all_iter(&cr->cache, &it)) {
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
+    ecs_table_cache_t *cache = &cr->cache;
+    int32_t i = 0;
+    while (i < ecs_vec_count(&cache->records)) {
+        ecs_table_cache_elem_t *elem = ecs_vec_get_t(
+            &cache->records, ecs_table_cache_elem_t, i);
+        ecs_table_t *table = elem->table;
 
-            if (table->keep) {
-                remaining = true;
-                continue;
-            }
-
-            if (ecs_table_count(table)) {
-                remaining = true;
-                continue;
-            }
-
-            /* Release current table */
-            flecs_table_fini(world, tr->hdr.table);
+        if (table->keep || ecs_table_count(table)) {
+            remaining = true;
+            i ++;
+            continue;
         }
+
+        flecs_table_fini(world, table);
     }
 
     return remaining;
@@ -1104,13 +1099,14 @@ bool flecs_component_iter(
     const ecs_component_record_t *cr,
     ecs_table_cache_iter_t *iter_out)
 {
-    return flecs_table_cache_all_iter(&cr->cache, iter_out);
+    return flecs_table_cache_iter(&cr->cache, iter_out, EcsTableEmpty|EcsTableNotEmpty);
 }
 
 const ecs_table_record_t* flecs_component_next(
     ecs_table_cache_iter_t *iter)
 {
-    return flecs_table_cache_next(iter, ecs_table_record_t);
+    const ecs_table_cache_elem_t *elem = flecs_table_cache_next(iter);
+    return elem ? elem->tr : NULL;
 }
 
 ecs_id_t flecs_component_get_id(

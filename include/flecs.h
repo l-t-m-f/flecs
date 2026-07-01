@@ -33,7 +33,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 6  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -241,6 +241,7 @@
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
 #define FLECS_SCRIPT         /**< Flecs entity notation language. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
+// #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
 #define FLECS_TIMER          /**< Timer support. */

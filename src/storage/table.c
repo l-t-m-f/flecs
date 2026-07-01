@@ -161,6 +161,7 @@ void flecs_table_init_columns(
         t2s[i] = cur;
         s2t[cur] = i;
         tr->column = flecs_ito(int16_t, cur);
+        flecs_table_cache_set_column(&cr->cache, table, tr->column);
 
         columns[cur].ti = ECS_CONST_CAST(ecs_type_info_t*, ti);
         
@@ -181,6 +182,7 @@ void flecs_table_init_columns(
         if (ecs_id_is_wildcard(id)) {
             ecs_table_record_t *first_tr = &records[tr->index];
             tr->column = first_tr->column;
+            flecs_table_cache_set_column(&cr->cache, table, tr->column);
         }
     }
 
@@ -1238,6 +1240,8 @@ void flecs_table_fini_data(
     table->data.count = 0;
     table->_->traversable_count = 0;
     table->flags &= ~EcsTableHasTraversable;
+    table->flags |= EcsTableEmpty;
+    table->flags &= ~EcsTableNotEmpty;
 
     flecs_increment_table_version(world, table);
 }
@@ -1621,6 +1625,11 @@ int32_t flecs_table_grow_data(
     int32_t count = ecs_table_count(table);
     int32_t column_count = table->column_count;
 
+    if (!count && to_add) {
+        table->flags &= ~EcsTableEmpty;
+        table->flags |= EcsTableNotEmpty;
+    }
+
     /* Add entity to column with entity ids */
     ecs_vec_t v_entities = ecs_vec_from_entities(table);
     ecs_vec_set_size_t(NULL, &v_entities, ecs_entity_t, size);
@@ -1773,6 +1782,11 @@ void flecs_table_append(
     flecs_table_mark_table_dirty(world, table, 0);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
+    if (!count) {
+        table->flags &= ~EcsTableEmpty;
+        table->flags |= EcsTableNotEmpty;
+    }
+
     /* Fast path: no toggle columns, no lifecycle actions */
     if (!(table->flags & (EcsTableIsComplex|EcsTableHasIsA))) {
         flecs_table_fast_append(table);
@@ -1900,6 +1914,10 @@ void flecs_table_delete(
         }
 
         table->data.count --;
+        if (!count) {
+            table->flags |= EcsTableEmpty;
+            table->flags &= ~EcsTableNotEmpty;
+        }
 
         flecs_table_check_sanity(table);
         return;
@@ -1956,6 +1974,10 @@ void flecs_table_delete(
     }
 
     table->data.count --;
+    if (!count) {
+        table->flags |= EcsTableEmpty;
+        table->flags &= ~EcsTableNotEmpty;
+    }
 
     flecs_table_check_sanity(table);
 }
@@ -2491,6 +2513,11 @@ void flecs_table_merge(
         flecs_table_traversable_add(dst_table, src_table->_->traversable_count);
         flecs_table_traversable_add(src_table, -src_table->_->traversable_count);
         ecs_assert(src_table->_->traversable_count == 0, ECS_INTERNAL_ERROR, NULL);
+
+        dst_table->flags &= ~EcsTableEmpty;
+        dst_table->flags |= EcsTableNotEmpty;
+        src_table->flags |= EcsTableEmpty;
+        src_table->flags &= ~EcsTableNotEmpty;
     }
 
     flecs_table_check_sanity(src_table);

@@ -558,6 +558,8 @@ void Function_forward_reference(void);
 void Function_fn_in_module(void);
 void Function_fn_in_module_qualified_call(void);
 void Function_fn_in_module_w_using(void);
+void Function_fn_in_namespace_called_from_fn_w_using(void);
+void Function_fn_in_nested_namespace_called_from_fn_w_using(void);
 void Function_f32_arg_and_return(void);
 void Function_f64_arg_and_return(void);
 void Function_bool_arg_and_return(void);
@@ -671,6 +673,7 @@ void Template_default_component_w_prop_var(void);
 void Template_default_component_w_prop_var_in_nested_if(void);
 void Template_default_component_w_prop_var_in_nested_for(void);
 void Template_template_w_new_expr_in_const(void);
+void Template_template_w_existing_observer(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -3734,6 +3737,14 @@ bake_test_case Function_testcases[] = {
         Function_fn_in_module_w_using
     },
     {
+        "fn_in_namespace_called_from_fn_w_using",
+        Function_fn_in_namespace_called_from_fn_w_using
+    },
+    {
+        "fn_in_nested_namespace_called_from_fn_w_using",
+        Function_fn_in_nested_namespace_called_from_fn_w_using
+    },
+    {
         "f32_arg_and_return",
         Function_f32_arg_and_return
     },
@@ -4179,6 +4190,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_new_expr_in_const",
         Template_template_w_new_expr_in_const
+    },
+    {
+        "template_w_existing_observer",
+        Template_template_w_existing_observer
     }
 };
 
@@ -7632,14 +7647,14 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        64,
+        66,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        89,
+        90,
         Template_testcases
     },
     {

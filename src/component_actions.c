@@ -334,7 +334,7 @@ void flecs_actions_on_add_intern(
         }
     }
 
-    if (diff_flags & (EcsTableHasOnAdd|EcsTableHasTraversable)) {
+    if (diff_flags & EcsTableHasOnAdd) {
         flecs_emit(world, world, &(ecs_event_desc_t){
             .event = EcsOnAdd,
             .ids = added,
@@ -408,7 +408,9 @@ void flecs_actions_on_remove_intern_w_reparent(
     }
 
     if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
-        if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
+        if (table != other_table &&
+            (!other_table || !(other_table->flags & EcsTableHasChildOf)))
+        {
             flecs_on_unparent(
                 world, table, other_table, row, count, diff_flags);
         }

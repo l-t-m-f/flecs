@@ -29,7 +29,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 6  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -218,6 +218,7 @@
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API. */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
+// #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @def FLECS_LOW_FOOTPRINT
@@ -575,10 +576,12 @@ extern "C" {
 #define EcsTableOverrideDontFragment   (1u << 23u)
 #define EcsTableHasOrderedChildren     (1u << 24u)
 #define EcsTableHasOverrides           (1u << 25u)
+#define EcsTableEmpty                  (1u << 26u) /* Does the table have no entities. */
 
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableEdgeReparent           (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 29u)
+#define EcsTableNotEmpty               (1u << 30u) /* Does the table have entities. */
 
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
@@ -4719,11 +4722,20 @@ typedef struct ecs_worker_iter_t {
     int32_t count;
 } ecs_worker_iter_t;
 
+/* Inlined element stored in a table cache. */
+typedef struct ecs_table_cache_elem_t {
+    ecs_table_t *table;                            /* Table associated with element */
+    ecs_table_record_t *tr;                        /* Table record for element */
+    int16_t column;                                /* Column for the table record */
+    int16_t index;                                 /* Index of element in table cache */
+} ecs_table_cache_elem_t;
+
 /* Convenience struct to iterate a table array for an ID. */
 typedef struct ecs_table_cache_iter_t {
-    const struct ecs_table_cache_hdr_t *cur, *next;
-    bool iter_fill;
-    bool iter_empty;
+    const ecs_table_cache_elem_t *elems;           /* Pointer into elements array */
+    int32_t remaining;                             /* Elements left to scan */
+    const ecs_table_cache_elem_t *cur;             /* Most recently returned element */
+    ecs_flags32_t flags;                           /* Table flags to match (EcsTableEmpty, EcsTableNotEmpty) */
 } ecs_table_cache_iter_t;
 
 /** Each iterator. */
@@ -5447,7 +5459,6 @@ struct ecs_record_t {
 typedef struct ecs_table_cache_hdr_t {
     struct ecs_component_record_t *cr;         /**< Component record for component. */
     ecs_table_t *table;                        /**< Table associated with element. */
-    struct ecs_table_cache_hdr_t *prev, *next; /**< Previous and next elements for ID in table cache. */
 } ecs_table_cache_hdr_t;
 
 /** Record that stores the location of a component in a table.
@@ -12448,6 +12459,9 @@ int ecs_value_move_ctor(
 #endif
 #ifdef FLECS_NO_SCRIPT_MATH
 #undef FLECS_SCRIPT_MATH
+#endif
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#undef FLECS_SCRIPT_PLATFORM
 #endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
