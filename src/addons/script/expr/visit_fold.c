@@ -252,6 +252,12 @@ int flecs_expr_initializer_pre_fold(
         ecs_expr_initializer_element_t *elem = &elems[i];
         ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        if (elem->key) {
+            if (flecs_expr_visit_fold(script, &elem->key, desc)) {
+                goto error;
+            }
+        }
+
         /* If this is a nested initializer, don't fold it but instead fold its
          * values. Because nested initializers are flattened, this ensures that
          * we'll be using the correct member offsets later. */
@@ -441,10 +447,15 @@ int flecs_expr_global_variable_visit_fold(
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
 {
-    (void)desc;
-
     ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
     ecs_entity_t type = node->node.type;
+
+    /* In a template body the node is kept unfolded so its value is read live
+     * from the const variable on every (re)instantiation. */
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    if (v && v->template) {
+        return 0;
+    }
 
     /* Global const variables are always const, so we can always fold */
 

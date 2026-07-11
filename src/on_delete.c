@@ -65,9 +65,11 @@ void flecs_target_mark_for_delete(
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
         }
-        if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
-            flecs_component_mark_for_delete(world, cr,
-                ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
+        if (world->cr_flag_count) {
+            if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
+                flecs_component_mark_for_delete(world, cr,
+                    ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
+            }
         }
     }
 }
@@ -199,6 +201,10 @@ bool flecs_is_childof_tgt_only(
         return false;
     }
 
+    if (flecs_table_cache_count(&cr->cache)) {
+        return false;
+    }
+
     return true;
 }
 
@@ -271,6 +277,10 @@ bool flecs_component_mark_non_fragmenting_childof(
     ecs_component_record_t *cr,
     bool force_delete)
 {
+    if (!world->non_fragmenting_child_count) {
+        return false;
+    }
+
     ecs_entity_t tgt = ECS_PAIR_SECOND(cr->id);
 
     ecs_component_record_t *childof_cr = flecs_components_get(
@@ -293,13 +303,11 @@ bool flecs_component_mark_non_fragmenting_childof(
 
     ecs_pair_record_t *pr = childof_cr->pair;
 
-    if (!pr->second.next) {
-        if (ECS_PAIR_FIRST(pr->second.prev->id) == EcsWildcard) {
-            /* Entity is only used as ChildOf target */
-            flecs_component_delete_non_fragmenting_childof(
-                world, childof_cr, force_delete);
-            return true;
-        }
+    if (flecs_is_childof_tgt_only(childof_cr)) {
+        /* Entity is only used as ChildOf target */
+        flecs_component_delete_non_fragmenting_childof(
+            world, childof_cr, force_delete);
+        return true;
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
@@ -417,7 +425,7 @@ void flecs_component_mark_for_delete(
                      * component through the deleted entity. */
                     if (!(cur->flags & EcsIdOnDeleteTargetDelete)) {
                         /* Only bother if tables have the relationship. */
-                        if (ecs_map_count(&cur->cache.index)) {
+                        if (flecs_table_cache_count(&cur->cache)) {
                             flecs_update_component_monitors(world, NULL, 
                                 &(ecs_type_t){
                                     .array = (ecs_id_t[]){cur->id},

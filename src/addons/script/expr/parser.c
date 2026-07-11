@@ -272,6 +272,26 @@ const char* flecs_script_parse_collection_initializer(
             goto error;
         }
 
+        {
+            bool is_key = false;
+
+            LookAhead_1(':', {
+                pos = lookahead;
+                is_key = true;
+                break;
+            })
+
+            if (is_key) {
+                elem->key = elem->value;
+                elem->value = NULL;
+
+                pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
+                if (!pos) {
+                    goto error;
+                }
+            }
+        }
+
         if (elem->value && elem->value->kind == EcsExprInitializer &&
             ((ecs_expr_initializer_t*)elem->value)->is_partial)
         {
@@ -532,6 +552,8 @@ const char* flecs_script_parse_lhs(
             const char *expr = Token(0);
             if (expr[0] == '$') {
                 *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
+            } else if (!ecs_os_strcmp(expr, "this")) {
+                *out = (ecs_expr_node_t*)flecs_expr_variable(parser, expr);
             } else if (!ecs_os_strcmp(expr, "true")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
             } else if (!ecs_os_strcmp(expr, "false")) {

@@ -673,6 +673,7 @@ ecs_component_record_t* flecs_component_new(
     world->info.component_id_count += cr->type_info != NULL;
     world->info.tag_id_count += cr->type_info == NULL;
     world->info.pair_id_count += is_pair;
+    world->cr_flag_count += is_pair && (ECS_PAIR_FIRST(id) == EcsFlag);
 
     return cr;
 }
@@ -749,6 +750,7 @@ void flecs_component_free(
     world->info.pair_id_count -= ECS_IS_PAIR(id);
     world->info.component_id_count -= cr->type_info != NULL;
     world->info.tag_id_count -= cr->type_info == NULL;
+    world->cr_flag_count -= ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == EcsFlag);
 
     /* Unregister the component record from the world & free resources */
     ecs_table_cache_fini(&cr->cache);
@@ -799,12 +801,9 @@ ecs_component_record_t* flecs_components_get(
     ecs_id_t id)
 {
     flecs_poly_assert(world, ecs_world_t);
-    if (id == ecs_pair(EcsIsA, EcsWildcard)) {
-        return world->cr_isa_wildcard;
-    } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
-        return world->cr_childof_wildcard;
-    } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
-        return world->cr_identifier_name;
+
+    if (id < FLECS_HI_ID_RECORD_ID) {
+        return world->id_index_lo[id];
     }
 
     ecs_id_t hash = flecs_component_hash(id);
@@ -898,6 +897,13 @@ const ecs_type_info_t* flecs_component_get_type_info(
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     return cr->type_info;
+}
+
+ecs_sparse_t* flecs_component_get_sparse(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return cr->sparse;
 }
 
 ecs_hashmap_t* flecs_component_name_index_ensure(

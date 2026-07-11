@@ -1189,6 +1189,25 @@ int flecs_query_finalize_terms(
             return -1;
         }
 
+        bool is_sparse = false;
+
+        ecs_component_record_t *cr = flecs_components_get(world, term->id);
+        ecs_flags32_t cr_flags = 0;
+
+        if (cr) {
+            cr_flags = cr->flags;
+        } else if (term->id) {
+            cr_flags = flecs_component_get_flags(world, term->id);
+        }
+
+        if (cr_flags & EcsIdSparse) {
+            is_sparse = true;
+        }
+
+        if ((cr_flags & EcsIdSingleton) && default_src) {
+            term->src.id = term->first.id|EcsSelf|EcsIsEntity;
+        }
+
         if (prev_is_or && !flecs_term_ref_same(&term[-1].src, &term->src, true)) {
             flecs_query_validator_error(&ctx,
                 "terms in an OR chain must have the same source");
@@ -1363,34 +1382,15 @@ int flecs_query_finalize_terms(
             }
         }
 
-        bool is_sparse = false;
-
-        ecs_component_record_t *cr = flecs_components_get(world, term->id);
-        ecs_flags32_t cr_flags = 0;
-
-        if (cr) {
-            cr_flags = cr->flags;
-        } else if (term->id) {
-            cr_flags = flecs_component_get_flags(world, term->id);
-        }
-
-        if (cr_flags & EcsIdSparse) {
-            is_sparse = true;
-        }
-
-        if (cr_flags & EcsIdSingleton) {
-            if (default_src) {
-                term->src.id = term->first.id|EcsSelf|EcsIsEntity;
-
-                ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
-                if (term->flags_ & EcsTermIsCacheable) {
-                    cacheable_terms --;
-                    ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
-                }
+        if ((cr_flags & EcsIdSingleton) && default_src) {
+            ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
+            if (term->flags_ & EcsTermIsCacheable) {
+                cacheable_terms --;
+                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
         }
 
-        /* If this is a static field, we need to assume that we might have 
+        /* If this is a static field, we need to assume that we might have
          * to do change detection. */
         if (term->src.id & EcsIsEntity) {
             if (term->id < FLECS_HI_COMPONENT_ID) {
@@ -2081,6 +2081,66 @@ done:
     #endif
 
     flecs_query_copy_arrays(q);
+
+    {
+        ecs_query_impl_t *impl = flecs_query_impl(q);
+        ecs_termset_t df_fields = 0, non_df_fields = 0;
+        int8_t i;
+        for (i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            ecs_termset_t bit = (ecs_termset_t)(1u << term->field_index);
+            if (term->flags_ & EcsTermDontFragment) {
+                df_fields |= bit;
+            } else {
+                non_df_fields |= bit;
+            }
+        }
+
+        impl->dont_fragment_fields = df_fields & (ecs_termset_t)~non_df_fields;
+    }
+
+    /* Check if this is a query for which all terms are sparse, which can use
+     * an iterator that directly iterates the sparse component storages. */
+    if (q->term_count && (q->term_count == q->field_count) &&
+        ((q->flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) ==
+            (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) &&
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryTableOnly|
+            EcsQueryMatchDisabled|EcsQueryMatchPrefab)))
+    {
+        bool trivial_sparse = true;
+        int8_t i;
+
+        for (i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+
+            if (term->oper != EcsAnd) {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (!(term->flags_ & EcsTermIsSparse) ||
+                !(term->flags_ & EcsTermDontFragment))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc|
+                EcsTermTransitive|EcsTermReflexive|EcsTermIdInherited|
+                EcsTermIsScope|EcsTermIsMember|EcsTermIsToggle|EcsTermIsOr))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (ecs_id_is_wildcard(term->id)) {
+                trivial_sparse = false;
+                break;
+            }
+        }
+
+        ECS_BIT_COND(q->flags, EcsQueryTrivialSparse, trivial_sparse);
+    }
 
     q->flags |= EcsQueryValid;
 

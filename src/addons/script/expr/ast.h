@@ -53,6 +53,7 @@ typedef struct ecs_expr_interpolated_string_t {
 
 typedef struct ecs_expr_initializer_element_t {
     const char *member;
+    ecs_expr_node_t *key;
     ecs_expr_node_t *value;
     uintptr_t offset;
     ecs_token_kind_t operator;
@@ -71,6 +72,7 @@ typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
     ecs_value_t global_value; /* Only set for global variables */
+    ecs_entity_t global; /* Entity of the global variable, if any */
     int32_t sp; /* For fast variable lookups */
 } ecs_expr_variable_t;
 

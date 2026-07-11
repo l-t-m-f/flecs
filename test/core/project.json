@@ -1144,6 +1144,7 @@
                 "lookup_after_delete_from_parent",
                 "defer_batch_remove_name_w_add_childof",
                 "defer_batch_remove_childof_w_add_name",
+                "defer_batch_remove_add_childof_same_pair_named",
                 "add_path_w_sep_null_path"
             ]
         }, {
@@ -1170,6 +1171,7 @@
                 "delete_with_tag_some_children",
                 "add_remove_ordered_children_after_in_use",
                 "add_remove_ordered_children_no_children",
+                "add_child_after_late_ordered_children",
                 "change_order_no_children",
                 "change_order_mismatching_child_count",
                 "change_order_mismatching_child_id",
@@ -1251,7 +1253,13 @@
                 "ensure_equal_get",
                 "get_tag",
                 "get_pair_tag",
-                "get_wildcard"
+                "get_wildcard",
+                "get_sparse",
+                "get_sparse_w_dont_fragment",
+                "get_sparse_w_pair",
+                "get_sparse_w_non_sparse",
+                "get_sparse_w_inherit",
+                "get_sparse_w_wildcard"
             ]
         }, {
             "id": "Reference",
@@ -1791,7 +1799,16 @@
                 "change_hook_while_in_use_w_pair",
                 "add_hook_while_in_use",
                 "add_on_set_hook_while_in_use",
-                "value_move_ctor_invokes_move_ctor"
+                "value_move_ctor_invokes_move_ctor",
+                "on_validate_true_invokes_on_set",
+                "on_validate_false_blocks_on_set",
+                "on_validate_true_invokes_on_set_observer",
+                "on_validate_false_blocks_on_set_observer",
+                "on_validate_receives_value",
+                "on_validate_blocks_modified",
+                "on_validate_per_entity_in_bulk",
+                "on_validate_false_blocks_on_set_deferred",
+                "on_validate_true_invokes_on_set_deferred"
             ]
         }, {
             "id": "Pairs",
@@ -2746,7 +2763,8 @@
                 "delete_with_component_used_by_prefab",
                 "delete_component_used_by_prefab",
                 "prefab_child_auto_override_pair_low_rel_id",
-                "reparent_to_prefab_is_prefab"
+                "reparent_to_prefab_is_prefab",
+                "add_same_childof_to_prefab_parent_w_name"
             ]
         }, {
             "id": "World",

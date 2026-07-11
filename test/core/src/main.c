@@ -1110,6 +1110,7 @@ void Hierarchies_lookup_after_delete_from_root(void);
 void Hierarchies_lookup_after_delete_from_parent(void);
 void Hierarchies_defer_batch_remove_name_w_add_childof(void);
 void Hierarchies_defer_batch_remove_childof_w_add_name(void);
+void Hierarchies_defer_batch_remove_add_childof_same_pair_named(void);
 void Hierarchies_add_path_w_sep_null_path(void);
 
 // Testsuite 'OrderedChildren'
@@ -1134,6 +1135,7 @@ void OrderedChildren_delete_with_tag_all_children(void);
 void OrderedChildren_delete_with_tag_some_children(void);
 void OrderedChildren_add_remove_ordered_children_after_in_use(void);
 void OrderedChildren_add_remove_ordered_children_no_children(void);
+void OrderedChildren_add_child_after_late_ordered_children(void);
 void OrderedChildren_change_order_no_children(void);
 void OrderedChildren_change_order_mismatching_child_count(void);
 void OrderedChildren_change_order_mismatching_child_id(void);
@@ -1210,6 +1212,12 @@ void Get_component_ensure_equal_get(void);
 void Get_component_get_tag(void);
 void Get_component_get_pair_tag(void);
 void Get_component_get_wildcard(void);
+void Get_component_get_sparse(void);
+void Get_component_get_sparse_w_dont_fragment(void);
+void Get_component_get_sparse_w_pair(void);
+void Get_component_get_sparse_w_non_sparse(void);
+void Get_component_get_sparse_w_inherit(void);
+void Get_component_get_sparse_w_wildcard(void);
 
 // Testsuite 'Reference'
 void Reference_setup(void);
@@ -1731,6 +1739,15 @@ void ComponentLifecycle_change_hook_while_in_use_w_pair(void);
 void ComponentLifecycle_add_hook_while_in_use(void);
 void ComponentLifecycle_add_on_set_hook_while_in_use(void);
 void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void);
+void ComponentLifecycle_on_validate_true_invokes_on_set(void);
+void ComponentLifecycle_on_validate_false_blocks_on_set(void);
+void ComponentLifecycle_on_validate_true_invokes_on_set_observer(void);
+void ComponentLifecycle_on_validate_false_blocks_on_set_observer(void);
+void ComponentLifecycle_on_validate_receives_value(void);
+void ComponentLifecycle_on_validate_blocks_modified(void);
+void ComponentLifecycle_on_validate_per_entity_in_bulk(void);
+void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void);
+void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -2668,6 +2685,7 @@ void Prefab_delete_with_component_used_by_prefab(void);
 void Prefab_delete_component_used_by_prefab(void);
 void Prefab_prefab_child_auto_override_pair_low_rel_id(void);
 void Prefab_reparent_to_prefab_is_prefab(void);
+void Prefab_add_same_childof_to_prefab_parent_w_name(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -7713,6 +7731,10 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_defer_batch_remove_childof_w_add_name
     },
     {
+        "defer_batch_remove_add_childof_same_pair_named",
+        Hierarchies_defer_batch_remove_add_childof_same_pair_named
+    },
+    {
         "add_path_w_sep_null_path",
         Hierarchies_add_path_w_sep_null_path
     }
@@ -7802,6 +7824,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "add_remove_ordered_children_no_children",
         OrderedChildren_add_remove_ordered_children_no_children
+    },
+    {
+        "add_child_after_late_ordered_children",
+        OrderedChildren_add_child_after_late_ordered_children
     },
     {
         "change_order_no_children",
@@ -8087,6 +8113,30 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_wildcard",
         Get_component_get_wildcard
+    },
+    {
+        "get_sparse",
+        Get_component_get_sparse
+    },
+    {
+        "get_sparse_w_dont_fragment",
+        Get_component_get_sparse_w_dont_fragment
+    },
+    {
+        "get_sparse_w_pair",
+        Get_component_get_sparse_w_pair
+    },
+    {
+        "get_sparse_w_non_sparse",
+        Get_component_get_sparse_w_non_sparse
+    },
+    {
+        "get_sparse_w_inherit",
+        Get_component_get_sparse_w_inherit
+    },
+    {
+        "get_sparse_w_wildcard",
+        Get_component_get_sparse_w_wildcard
     }
 };
 
@@ -10110,6 +10160,42 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "value_move_ctor_invokes_move_ctor",
         ComponentLifecycle_value_move_ctor_invokes_move_ctor
+    },
+    {
+        "on_validate_true_invokes_on_set",
+        ComponentLifecycle_on_validate_true_invokes_on_set
+    },
+    {
+        "on_validate_false_blocks_on_set",
+        ComponentLifecycle_on_validate_false_blocks_on_set
+    },
+    {
+        "on_validate_true_invokes_on_set_observer",
+        ComponentLifecycle_on_validate_true_invokes_on_set_observer
+    },
+    {
+        "on_validate_false_blocks_on_set_observer",
+        ComponentLifecycle_on_validate_false_blocks_on_set_observer
+    },
+    {
+        "on_validate_receives_value",
+        ComponentLifecycle_on_validate_receives_value
+    },
+    {
+        "on_validate_blocks_modified",
+        ComponentLifecycle_on_validate_blocks_modified
+    },
+    {
+        "on_validate_per_entity_in_bulk",
+        ComponentLifecycle_on_validate_per_entity_in_bulk
+    },
+    {
+        "on_validate_false_blocks_on_set_deferred",
+        ComponentLifecycle_on_validate_false_blocks_on_set_deferred
+    },
+    {
+        "on_validate_true_invokes_on_set_deferred",
+        ComponentLifecycle_on_validate_true_invokes_on_set_deferred
     }
 };
 
@@ -13805,6 +13891,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "reparent_to_prefab_is_prefab",
         Prefab_reparent_to_prefab_is_prefab
+    },
+    {
+        "add_same_childof_to_prefab_parent_w_name",
+        Prefab_add_same_childof_to_prefab_parent_w_name
     }
 };
 
@@ -16687,14 +16777,14 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        116,
+        117,
         Hierarchies_testcases
     },
     {
         "OrderedChildren",
         NULL,
         NULL,
-        48,
+        49,
         OrderedChildren_testcases
     },
     {
@@ -16715,7 +16805,7 @@ static bake_test_suite suites[] = {
         "Get_component",
         Get_component_setup,
         NULL,
-        15,
+        21,
         Get_component_testcases
     },
     {
@@ -16778,7 +16868,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        156,
+        165,
         ComponentLifecycle_testcases
     },
     {
@@ -16841,7 +16931,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        204,
+        205,
         Prefab_testcases
     },
     {

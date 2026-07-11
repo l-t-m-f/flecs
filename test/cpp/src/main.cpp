@@ -515,6 +515,7 @@ void Enum_enum_as_component(void);
 void Enum_query_enum_wildcard(void);
 void Enum_query_enum_constant(void);
 void Enum_query_singleton_enum_constant(void);
+void Enum_query_singleton_enum_constant_or(void);
 void Enum_enum_type_from_stage(void);
 void Enum_add_enum_from_stage(void);
 void Enum_enum_w_2_worlds(void);
@@ -623,6 +624,7 @@ void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
 void System_custom_pipeline(void);
 void System_custom_pipeline_w_kind(void);
+void System_custom_pipeline_w_name(void);
 void System_instanced_query_w_singleton_each(void);
 void System_instanced_query_w_base_each(void);
 void System_instanced_query_w_singleton_iter(void);
@@ -842,6 +844,30 @@ void Query_optional_module(void);
 void Query_has_entity(void);
 void Query_has_table(void);
 void Query_has_range(void);
+void Query_dont_fragment_trait_registered(void);
+void Query_dont_fragment_trait_specialized_registered(void);
+void Query_each_dont_fragment_trait(void);
+void Query_each_dont_fragment_trait_mixed(void);
+void Query_each_dont_fragment_trait_shared(void);
+void Query_each_optional_sparse(void);
+void Query_sparse_query_type(void);
+void Query_sparse_query_each(void);
+void Query_sparse_query_empty(void);
+void Query_sparse_query_recycled_entity(void);
+void Query_sparse_query_skip_prefab_disabled(void);
+void Query_sparse_query_type_on_instantiate(void);
+void Query_sparse_query_type_no_on_instantiate(void);
+void Query_sparse_query_each_on_instantiate_override(void);
+void Query_sparse_query_each_on_instantiate_dont_inherit(void);
+void Query_sparse_query_each_on_instantiate_mixed_terms(void);
+void Query_sparse_query_dynamic_inherit_1_term(void);
+void Query_sparse_query_dynamic_inherit_3_terms(void);
+void Query_sparse_query_dynamic_inherit_assert(void);
+void Query_sparse_query_dynamic_dont_inherit(void);
+void Query_sparse_query_convert_to_query_1_term(void);
+void Query_sparse_query_convert_to_query_3_terms(void);
+void Query_world_each_sparse(void);
+void Query_world_each_sparse_w_entity(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -1248,6 +1274,9 @@ void ComponentLifecycle_compare_int16_Enum(void);
 void ComponentLifecycle_compare_int32_Enum(void);
 void ComponentLifecycle_compare_int64_Enum(void);
 void ComponentLifecycle_move_ctor_no_default_ctor(void);
+void ComponentLifecycle_on_validate_hook(void);
+void ComponentLifecycle_on_validate_hook_blocks_on_set(void);
+void ComponentLifecycle_on_validate_hook_blocks_observer(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -1650,6 +1679,47 @@ void Table_lock(void);
 void Table_unlock(void);
 void Table_has_flags(void);
 void Table_clear_entities(void);
+
+// Testsuite 'ComponentTraits'
+void ComponentTraits_dont_fragment_explicit(void);
+void ComponentTraits_dont_fragment_implicit(void);
+void ComponentTraits_on_instantiate_override_explicit(void);
+void ComponentTraits_on_instantiate_override_implicit(void);
+void ComponentTraits_on_instantiate_inherit_explicit(void);
+void ComponentTraits_on_instantiate_inherit_implicit(void);
+void ComponentTraits_on_instantiate_dont_inherit_explicit(void);
+void ComponentTraits_on_instantiate_dont_inherit_implicit(void);
+void ComponentTraits_on_instantiate_specialized_explicit(void);
+void ComponentTraits_on_instantiate_specialized_implicit(void);
+void ComponentTraits_dont_fragment_dont_inherit_explicit(void);
+void ComponentTraits_dont_fragment_dont_inherit_implicit(void);
+void ComponentTraits_no_traits_explicit(void);
+void ComponentTraits_no_traits_implicit(void);
+void ComponentTraits_sparse_explicit(void);
+void ComponentTraits_sparse_implicit(void);
+void ComponentTraits_sparse_specialized(void);
+void ComponentTraits_sparse_get_get_mut(void);
+void ComponentTraits_sparse_try_get_not_found(void);
+void ComponentTraits_dont_fragment_get_get_mut(void);
+void ComponentTraits_on_instantiate_override_get_get_mut(void);
+void ComponentTraits_on_instantiate_dont_inherit_get_get_mut(void);
+void ComponentTraits_on_instantiate_inherit_get_inherited(void);
+void ComponentTraits_no_traits_get_inherited(void);
+void ComponentTraits_get_dispatch(void);
+void ComponentTraits_dynamic_inherit_dense_owned(void);
+void ComponentTraits_dynamic_inherit_dense_inherited(void);
+void ComponentTraits_dynamic_inherit_sparse_owned(void);
+void ComponentTraits_dynamic_inherit_sparse_owned_get_mut(void);
+void ComponentTraits_dynamic_inherit_sparse_inherited(void);
+void ComponentTraits_dynamic_inherit_dont_fragment_owned(void);
+void ComponentTraits_dynamic_inherit_dont_fragment_owned_get_mut(void);
+void ComponentTraits_dynamic_inherit_dont_fragment_inherited(void);
+void ComponentTraits_static_inherit_dense_owned(void);
+void ComponentTraits_static_inherit_dense_inherited(void);
+void ComponentTraits_static_inherit_sparse_owned(void);
+void ComponentTraits_static_inherit_sparse_inherited(void);
+void ComponentTraits_static_inherit_dont_fragment_owned(void);
+void ComponentTraits_static_inherit_dont_fragment_inherited(void);
 
 bake_test_case PrettyFunction_testcases[] = {
     {
@@ -3657,6 +3727,10 @@ bake_test_case Enum_testcases[] = {
         Enum_query_singleton_enum_constant
     },
     {
+        "query_singleton_enum_constant_or",
+        Enum_query_singleton_enum_constant_or
+    },
+    {
         "enum_type_from_stage",
         Enum_enum_type_from_stage
     },
@@ -4072,6 +4146,10 @@ bake_test_case System_testcases[] = {
     {
         "custom_pipeline_w_kind",
         System_custom_pipeline_w_kind
+    },
+    {
+        "custom_pipeline_w_name",
+        System_custom_pipeline_w_name
     },
     {
         "instanced_query_w_singleton_each",
@@ -4933,6 +5011,102 @@ bake_test_case Query_testcases[] = {
     {
         "has_range",
         Query_has_range
+    },
+    {
+        "dont_fragment_trait_registered",
+        Query_dont_fragment_trait_registered
+    },
+    {
+        "dont_fragment_trait_specialized_registered",
+        Query_dont_fragment_trait_specialized_registered
+    },
+    {
+        "each_dont_fragment_trait",
+        Query_each_dont_fragment_trait
+    },
+    {
+        "each_dont_fragment_trait_mixed",
+        Query_each_dont_fragment_trait_mixed
+    },
+    {
+        "each_dont_fragment_trait_shared",
+        Query_each_dont_fragment_trait_shared
+    },
+    {
+        "each_optional_sparse",
+        Query_each_optional_sparse
+    },
+    {
+        "sparse_query_type",
+        Query_sparse_query_type
+    },
+    {
+        "sparse_query_each",
+        Query_sparse_query_each
+    },
+    {
+        "sparse_query_empty",
+        Query_sparse_query_empty
+    },
+    {
+        "sparse_query_recycled_entity",
+        Query_sparse_query_recycled_entity
+    },
+    {
+        "sparse_query_skip_prefab_disabled",
+        Query_sparse_query_skip_prefab_disabled
+    },
+    {
+        "sparse_query_type_on_instantiate",
+        Query_sparse_query_type_on_instantiate
+    },
+    {
+        "sparse_query_type_no_on_instantiate",
+        Query_sparse_query_type_no_on_instantiate
+    },
+    {
+        "sparse_query_each_on_instantiate_override",
+        Query_sparse_query_each_on_instantiate_override
+    },
+    {
+        "sparse_query_each_on_instantiate_dont_inherit",
+        Query_sparse_query_each_on_instantiate_dont_inherit
+    },
+    {
+        "sparse_query_each_on_instantiate_mixed_terms",
+        Query_sparse_query_each_on_instantiate_mixed_terms
+    },
+    {
+        "sparse_query_dynamic_inherit_1_term",
+        Query_sparse_query_dynamic_inherit_1_term
+    },
+    {
+        "sparse_query_dynamic_inherit_3_terms",
+        Query_sparse_query_dynamic_inherit_3_terms
+    },
+    {
+        "sparse_query_dynamic_inherit_assert",
+        Query_sparse_query_dynamic_inherit_assert
+    },
+    {
+        "sparse_query_dynamic_dont_inherit",
+        Query_sparse_query_dynamic_dont_inherit
+    },
+    {
+        "sparse_query_convert_to_query_1_term",
+        Query_sparse_query_convert_to_query_1_term
+    },
+    {
+        "sparse_query_convert_to_query_3_terms",
+        Query_sparse_query_convert_to_query_3_terms
+    },
+    {
+        "world_each_sparse",
+        Query_world_each_sparse
+    },
+    {
+        "world_each_sparse_w_entity",
+        Query_world_each_sparse_w_entity
     }
 };
 
@@ -6533,6 +6707,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_ctor_no_default_ctor",
         ComponentLifecycle_move_ctor_no_default_ctor
+    },
+    {
+        "on_validate_hook",
+        ComponentLifecycle_on_validate_hook
+    },
+    {
+        "on_validate_hook_blocks_on_set",
+        ComponentLifecycle_on_validate_hook_blocks_on_set
+    },
+    {
+        "on_validate_hook_blocks_observer",
+        ComponentLifecycle_on_validate_hook_blocks_observer
     }
 };
 
@@ -8104,6 +8290,165 @@ bake_test_case Table_testcases[] = {
     }
 };
 
+bake_test_case ComponentTraits_testcases[] = {
+    {
+        "dont_fragment_explicit",
+        ComponentTraits_dont_fragment_explicit
+    },
+    {
+        "dont_fragment_implicit",
+        ComponentTraits_dont_fragment_implicit
+    },
+    {
+        "on_instantiate_override_explicit",
+        ComponentTraits_on_instantiate_override_explicit
+    },
+    {
+        "on_instantiate_override_implicit",
+        ComponentTraits_on_instantiate_override_implicit
+    },
+    {
+        "on_instantiate_inherit_explicit",
+        ComponentTraits_on_instantiate_inherit_explicit
+    },
+    {
+        "on_instantiate_inherit_implicit",
+        ComponentTraits_on_instantiate_inherit_implicit
+    },
+    {
+        "on_instantiate_dont_inherit_explicit",
+        ComponentTraits_on_instantiate_dont_inherit_explicit
+    },
+    {
+        "on_instantiate_dont_inherit_implicit",
+        ComponentTraits_on_instantiate_dont_inherit_implicit
+    },
+    {
+        "on_instantiate_specialized_explicit",
+        ComponentTraits_on_instantiate_specialized_explicit
+    },
+    {
+        "on_instantiate_specialized_implicit",
+        ComponentTraits_on_instantiate_specialized_implicit
+    },
+    {
+        "dont_fragment_dont_inherit_explicit",
+        ComponentTraits_dont_fragment_dont_inherit_explicit
+    },
+    {
+        "dont_fragment_dont_inherit_implicit",
+        ComponentTraits_dont_fragment_dont_inherit_implicit
+    },
+    {
+        "no_traits_explicit",
+        ComponentTraits_no_traits_explicit
+    },
+    {
+        "no_traits_implicit",
+        ComponentTraits_no_traits_implicit
+    },
+    {
+        "sparse_explicit",
+        ComponentTraits_sparse_explicit
+    },
+    {
+        "sparse_implicit",
+        ComponentTraits_sparse_implicit
+    },
+    {
+        "sparse_specialized",
+        ComponentTraits_sparse_specialized
+    },
+    {
+        "sparse_get_get_mut",
+        ComponentTraits_sparse_get_get_mut
+    },
+    {
+        "sparse_try_get_not_found",
+        ComponentTraits_sparse_try_get_not_found
+    },
+    {
+        "dont_fragment_get_get_mut",
+        ComponentTraits_dont_fragment_get_get_mut
+    },
+    {
+        "on_instantiate_override_get_get_mut",
+        ComponentTraits_on_instantiate_override_get_get_mut
+    },
+    {
+        "on_instantiate_dont_inherit_get_get_mut",
+        ComponentTraits_on_instantiate_dont_inherit_get_get_mut
+    },
+    {
+        "on_instantiate_inherit_get_inherited",
+        ComponentTraits_on_instantiate_inherit_get_inherited
+    },
+    {
+        "no_traits_get_inherited",
+        ComponentTraits_no_traits_get_inherited
+    },
+    {
+        "get_dispatch",
+        ComponentTraits_get_dispatch
+    },
+    {
+        "dynamic_inherit_dense_owned",
+        ComponentTraits_dynamic_inherit_dense_owned
+    },
+    {
+        "dynamic_inherit_dense_inherited",
+        ComponentTraits_dynamic_inherit_dense_inherited
+    },
+    {
+        "dynamic_inherit_sparse_owned",
+        ComponentTraits_dynamic_inherit_sparse_owned
+    },
+    {
+        "dynamic_inherit_sparse_owned_get_mut",
+        ComponentTraits_dynamic_inherit_sparse_owned_get_mut
+    },
+    {
+        "dynamic_inherit_sparse_inherited",
+        ComponentTraits_dynamic_inherit_sparse_inherited
+    },
+    {
+        "dynamic_inherit_dont_fragment_owned",
+        ComponentTraits_dynamic_inherit_dont_fragment_owned
+    },
+    {
+        "dynamic_inherit_dont_fragment_owned_get_mut",
+        ComponentTraits_dynamic_inherit_dont_fragment_owned_get_mut
+    },
+    {
+        "dynamic_inherit_dont_fragment_inherited",
+        ComponentTraits_dynamic_inherit_dont_fragment_inherited
+    },
+    {
+        "static_inherit_dense_owned",
+        ComponentTraits_static_inherit_dense_owned
+    },
+    {
+        "static_inherit_dense_inherited",
+        ComponentTraits_static_inherit_dense_inherited
+    },
+    {
+        "static_inherit_sparse_owned",
+        ComponentTraits_static_inherit_sparse_owned
+    },
+    {
+        "static_inherit_sparse_inherited",
+        ComponentTraits_static_inherit_sparse_inherited
+    },
+    {
+        "static_inherit_dont_fragment_owned",
+        ComponentTraits_static_inherit_dont_fragment_owned
+    },
+    {
+        "static_inherit_dont_fragment_inherited",
+        ComponentTraits_static_inherit_dont_fragment_inherited
+    }
+};
+
 const char* QueryBuilder_cache_kind_param[] = {"default", "auto"};
 bake_test_param QueryBuilder_params[] = {
     {"cache_kind", (char**)QueryBuilder_cache_kind_param, 2}
@@ -8142,7 +8487,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        53,
+        54,
         Enum_testcases
     },
     {
@@ -8163,7 +8508,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        78,
+        79,
         System_testcases
     },
     {
@@ -8184,7 +8529,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        141,
+        165,
         Query_testcases
     },
     {
@@ -8214,7 +8559,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        105,
+        108,
         ComponentLifecycle_testcases
     },
     {
@@ -8272,9 +8617,16 @@ static bake_test_suite suites[] = {
         NULL,
         40,
         Table_testcases
+    },
+    {
+        "ComponentTraits",
+        NULL,
+        NULL,
+        39,
+        ComponentTraits_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp", argc, argv, suites, 23);
+    return bake_test_run("cpp", argc, argv, suites, 24);
 }
