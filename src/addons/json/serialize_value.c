@@ -8,16 +8,20 @@
 
 #ifdef FLECS_JSON
 
-static
-int flecs_json_ser_type_slice(
+static int flecs_json_ser_type_slice(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
     const void *base, 
     ecs_strbuf_t *str);
 
-static
-int flecs_json_ser_enum(
+static int flecs_json_ser_forward(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *base,
+    ecs_strbuf_t *str);
+
+static int flecs_json_ser_enum(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *base, 
@@ -32,8 +36,7 @@ int flecs_json_ser_enum(
     return 0;
 }
 
-static
-int flecs_json_ser_bitmask(
+static int flecs_json_ser_bitmask(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *ptr, 
@@ -52,8 +55,7 @@ typedef struct json_serializer_ctx_t {
     bool is_collection;
 } json_serializer_ctx_t;
 
-static
-int flecs_json_ser_opaque_value(
+static int flecs_json_ser_opaque_value(
     const ecs_serializer_t *ser,
     ecs_entity_t type,
     const void *value)
@@ -65,8 +67,7 @@ int flecs_json_ser_opaque_value(
     return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
 }
 
-static
-int flecs_json_ser_opaque_member(
+static int flecs_json_ser_opaque_member(
     const ecs_serializer_t *ser,
     const char *name)
 {
@@ -75,8 +76,7 @@ int flecs_json_ser_opaque_member(
     return 0;
 }
 
-static
-int flecs_json_ser_opaque(
+static int flecs_json_ser_opaque(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *base, 
@@ -117,8 +117,7 @@ int flecs_json_ser_opaque(
     return 0;
 }
 
-static
-int flecs_json_ser_scope(
+static int flecs_json_ser_scope(
     const ecs_world_t *world,
     ecs_meta_op_t *op,
     const void *base,
@@ -131,8 +130,7 @@ int flecs_json_ser_scope(
     return 0;
 }
 
-static
-int flecs_json_ser_array(
+static int flecs_json_ser_array(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *array,
@@ -155,8 +153,7 @@ int flecs_json_ser_array(
     return 0;
 }
 
-static
-int flecs_json_ser_map(
+static int flecs_json_ser_map(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *base,
@@ -197,8 +194,42 @@ int flecs_json_ser_map(
     return 0;
 }
 
-static
-int flecs_json_ser_forward(
+static int flecs_json_ser_value(
+    const ecs_world_t *world,
+    const void *base,
+    ecs_strbuf_t *str)
+{
+    const ecs_value_t *value = base;
+
+    if (!value->type || !value->ptr) {
+        ecs_assert(false, ECS_INVALID_PARAMETER, 
+            "cannot serialize value without value");
+        ecs_err("cannot serialize value without value");
+        return -1;
+    }
+
+    ecs_strbuf_t type_str = ECS_STRBUF_INIT;
+    if (flecs_meta_value_type_str(world, value->type, &type_str)) {
+        ecs_strbuf_reset(&type_str);
+        return -1;
+    }
+
+    flecs_json_object_push(str);
+
+    char *type_name = ecs_strbuf_get(&type_str);
+    flecs_json_member(str, type_name);
+    ecs_os_free(type_name);
+
+    if (flecs_json_ser_forward(world, value->type, value->ptr, str)) {
+        return -1;
+    }
+
+    flecs_json_object_pop(str);
+
+    return 0;
+}
+
+static int flecs_json_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *base,
@@ -216,8 +247,7 @@ int flecs_json_ser_forward(
 }
 
 /* Iterate over a slice of the type ops array */
-static
-int flecs_json_ser_type_slice(
+static int flecs_json_ser_type_slice(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
@@ -281,6 +311,14 @@ int flecs_json_ser_type_slice(
         }
         case EcsOpPushMap: {
             if (flecs_json_ser_map(world, op, ptr, str)) {
+                goto error;
+            }
+
+            i += op->op_count - 1;
+            break;
+        }
+        case EcsOpPushValue: {
+            if (flecs_json_ser_value(world, ptr, str)) {
                 goto error;
             }
 
@@ -390,8 +428,7 @@ int flecs_json_ser_type(
     return flecs_json_ser_type_slice(world, ops, count, base, str);
 }
 
-static
-int flecs_array_to_json_buf_w_type_data(
+static int flecs_array_to_json_buf_w_type_data(
     const ecs_world_t *world,
     const void *ptr,
     int32_t count,

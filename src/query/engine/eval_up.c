@@ -5,9 +5,10 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 /* Find tables with requested component that have traversable entities. */
-static
-bool flecs_query_up_select_table(
+static bool flecs_query_up_select_table(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -67,8 +68,7 @@ bool flecs_query_up_select_table(
 }
 
 /* Find next traversable entity in table. */
-static
-ecs_trav_down_t* flecs_query_up_find_next_traversable(
+static ecs_trav_down_t* flecs_query_up_find_next_traversable(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_up_select_trav_kind_t trav_kind)
@@ -333,18 +333,26 @@ bool flecs_query_up_with(
         if (impl->trav == EcsChildOf) {
             if (range.table->flags & EcsTableHasParent) {
                 if (q->flags & EcsQueryNested) {
-                    /* If this is a nested query (used to populate a cache), 
+                    /* If this is a nested query (used to populate a cache),
                      * don't store entries for individual entities in the cache.
-                     * Instead, match the entire table, and figure out from 
+                     * Instead, match the entire table, and figure out from
                      * which parent the entity gets the component in an uncached
                      * operation. */
 
-                    /* Signal that the uncached instruction needs to search. 
-                     * This helps distinguish between tables with a Parent 
+                    if (q->terms[op->term_index].oper == EcsNot) {
+                        return false;
+                    }
+
+                    /* Signal that the uncached instruction needs to search.
+                     * This helps distinguish between tables with a Parent
                      * component that own the component vs. those that don't. */
                     it->sources[op->field_index] = EcsWildcard;
                     ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
                     return true;
+                }
+
+                if (!op_ctx->range.count) {
+                    return false;
                 }
 
                 /* Signals that we need to evaluate individual rows. */
@@ -478,3 +486,5 @@ bool flecs_query_self_up(
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
     }
 }
+
+#endif // FLECS_QUERY_PLANS

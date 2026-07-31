@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-void ecs_script_params_free(ecs_vec_t *params) {
+static void ecs_script_params_free(ecs_vec_t *params) {
     int32_t i, count = ecs_vec_count(params);
     if (count) {
         ecs_script_parameter_t *array = ecs_vec_first(params);
@@ -23,8 +22,7 @@ void ecs_script_params_free(ecs_vec_t *params) {
     ecs_os_zeromem(params);
 }
 
-static
-void ecs_script_params_copy(
+static void ecs_script_params_copy(
     ecs_vec_t *dst,
     const ecs_vec_t *src)
 {
@@ -49,8 +47,7 @@ void ecs_script_params_copy(
     }
 }
 
-static
-void ecs_script_const_var_fini(
+static void ecs_script_const_var_fini(
     EcsScriptConstVar *ptr)
 {
     if (!ptr->value.ptr) {
@@ -66,8 +63,7 @@ void ecs_script_const_var_fini(
     ptr->type_info = NULL;
 }
 
-static
-ECS_COPY(EcsScriptConstVar, dst, src, {
+static ECS_COPY(EcsScriptConstVar, dst, src, {
     ecs_script_const_var_fini(dst);
     dst->value.type = src->value.type;
     dst->type_info = src->type_info;
@@ -80,8 +76,7 @@ ECS_COPY(EcsScriptConstVar, dst, src, {
     }
 })
 
-static
-ECS_MOVE(EcsScriptConstVar, dst, src, {
+static ECS_MOVE(EcsScriptConstVar, dst, src, {
     ecs_script_const_var_fini(dst);
     
     *dst = *src;
@@ -91,13 +86,11 @@ ECS_MOVE(EcsScriptConstVar, dst, src, {
     src->type_info = NULL;
 })
 
-static
-ECS_DTOR(EcsScriptConstVar, ptr, {
+static ECS_DTOR(EcsScriptConstVar, ptr, {
     ecs_script_const_var_fini(ptr);
 })
 
-static
-ECS_COPY(EcsScriptFunction, dst, src, {
+static ECS_COPY(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
@@ -112,8 +105,7 @@ ECS_COPY(EcsScriptFunction, dst, src, {
     ecs_script_params_copy(&dst->params, &src->params);
 })
 
-static
-ECS_MOVE(EcsScriptFunction, dst, src, {
+static ECS_MOVE(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
@@ -122,8 +114,7 @@ ECS_MOVE(EcsScriptFunction, dst, src, {
     ecs_os_zeromem(src);
 })
 
-static
-ECS_DTOR(EcsScriptFunction, ptr, {
+static ECS_DTOR(EcsScriptFunction, ptr, {
     ecs_script_params_free(&ptr->params);
     if (ptr->binding_ctx && ptr->binding_ctx_free) {
         ptr->binding_ctx_free(ptr->binding_ctx);
@@ -132,8 +123,7 @@ ECS_DTOR(EcsScriptFunction, ptr, {
     }
 })
 
-static
-ECS_COPY(EcsScriptMethod, dst, src, {
+static ECS_COPY(EcsScriptMethod, dst, src, {
     ecs_script_params_free(&dst->params);
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
@@ -148,8 +138,7 @@ ECS_COPY(EcsScriptMethod, dst, src, {
     ecs_script_params_copy(&dst->params, &src->params);
 })
 
-static
-ECS_MOVE(EcsScriptMethod, dst, src, {
+static ECS_MOVE(EcsScriptMethod, dst, src, {
     ecs_script_params_free(&dst->params);
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
@@ -158,8 +147,7 @@ ECS_MOVE(EcsScriptMethod, dst, src, {
     ecs_os_zeromem(src);
 })
 
-static
-ECS_DTOR(EcsScriptMethod, ptr, {
+static ECS_DTOR(EcsScriptMethod, ptr, {
     ecs_script_params_free(&ptr->params);
     if (ptr->binding_ctx && ptr->binding_ctx_free) {
         ptr->binding_ctx_free(ptr->binding_ctx);
@@ -201,8 +189,8 @@ ecs_entity_t ecs_const_var_init(
     v->value.ptr = ecs_os_malloc(ti->size);
     v->value.type = desc->type;
     v->type_info = ti;
-    ecs_value_init(world, desc->type, v->value.ptr);
-    ecs_value_copy(world, desc->type, v->value.ptr, desc->value);
+    ecs_ptr_init(world, desc->type, v->value.ptr);
+    ecs_ptr_copy(world, desc->type, v->value.ptr, desc->value);
     ecs_modified(world, result, EcsScriptConstVar);
 
     return result;
@@ -225,9 +213,15 @@ error:
     return (ecs_value_t){0};
 }
 
+void ecs_const_var_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_modified(world, entity, EcsScriptConstVar);
+}
+
 #ifdef FLECS_DEBUG
-static
-bool flecs_script_function_has_vector_args(
+static bool flecs_script_function_has_vector_args(
     const ecs_function_desc_t *desc)
 {
     int32_t i;
@@ -244,8 +238,7 @@ bool flecs_script_function_has_vector_args(
     return false;
 }
 
-static
-int flecs_script_function_validate_desc(
+static int flecs_script_function_validate_desc(
     const ecs_function_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -279,8 +272,7 @@ error:
 }
 #endif
 
-static
-void flecs_script_function_parse_args(
+static void flecs_script_function_parse_args(
     const ecs_function_desc_t *desc,
     ecs_vec_t *params)
 {
@@ -368,6 +360,127 @@ error:
     return 0;
 }
 
+static
+int flecs_script_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    const struct ecs_script_function_t *f,
+    const ecs_value_t *instance,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    ecs_check(f != NULL, ECS_INVALID_PARAMETER,
+        "entity is not a script function or method");
+    ecs_check(f->callback != NULL, ECS_UNSUPPORTED,
+        "vector functions cannot be called directly");
+    ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
+        "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
+    ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    (void)params;
+    int32_t i;
+    for (i = 0; i < argc; i ++) {
+        ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
+            "type of argument %d does not match parameter type", i);
+        ecs_check(argv[i].ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (instance) {
+        ecs_check(instance->type == ecs_get_parent(world, function),
+            ECS_INVALID_PARAMETER,
+            "instance type does not match method type");
+        ecs_check(instance->ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    ecs_check(!result->type || result->type == f->return_type,
+        ECS_INVALID_PARAMETER, "result type does not match function return type");
+
+    bool result_allocated = false;
+    if (!result->ptr) {
+        *result = ecs_value_new(world, f->return_type);
+        ecs_check(result->ptr != NULL, ECS_INVALID_PARAMETER,
+            "function return type is not a valid value type");
+        result_allocated = true;
+    } else if (!result->type) {
+        result->type = f->return_type;
+    }
+
+    const ecs_value_t *call_argv = argv;
+    if (instance) {
+        ecs_value_t *method_argv = ecs_os_alloca_n(ecs_value_t, argc + 1);
+        method_argv[0] = *instance;
+        if (argc) {
+            ecs_os_memcpy_n(&method_argv[1], argv, ecs_value_t, argc);
+        }
+        call_argv = method_argv;
+    }
+
+    ecs_function_ctx_t ctx = {
+        .world = world,
+        .function = function,
+        .ctx = f->ctx
+    };
+
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    flecs_script_runtime_error_reset(runtime);
+    f->callback(&ctx, argc, call_argv, result);
+    if (runtime->error) {
+        runtime->error = false;
+        if (result_allocated) {
+            ecs_value_fini(world, result);
+        }
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int ecs_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
+    ecs_check(function != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        real_world, function, EcsScriptFunction);
+    return flecs_script_function_call(
+        world, function, f, NULL, argc, argv, result);
+error:
+    return -1;
+}
+
+int ecs_method_call(
+    ecs_world_t *world,
+    ecs_entity_t method,
+    const ecs_value_t *instance,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
+    ecs_check(method != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(instance != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsScriptMethod *f = ecs_get(
+        real_world, method, EcsScriptMethod);
+    return flecs_script_function_call(
+        world, method, f, instance, argc, argv, result);
+error:
+    return -1;
+}
+
 void flecs_function_import(
     ecs_world_t *world)
 {
@@ -375,6 +488,13 @@ void flecs_function_import(
     ECS_COMPONENT_DEFINE(world, EcsScriptConstVar);
     ECS_COMPONENT_DEFINE(world, EcsScriptFunction);
     ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptConstVar),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_value_t) }
+        }
+    });
 
     ecs_struct(world, {
         .entity = ecs_id(EcsScriptFunction),

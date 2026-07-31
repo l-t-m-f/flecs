@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-static
-int flecs_meta_ser_scalar(
+static int flecs_meta_ser_scalar(
     const ecs_world_t *world,
     ecs_meta_op_kind_t op_kind,
     const void *ptr, 
@@ -127,6 +126,7 @@ int flecs_meta_ser_scalar(
     case EcsOpPushArray:
     case EcsOpPushVector:
     case EcsOpPushMap:
+    case EcsOpPushValue:
     case EcsOpOpaqueValue:
     case EcsOpOpaqueStruct:
     case EcsOpOpaqueArray:
@@ -196,6 +196,7 @@ ecs_entity_t flecs_meta_op_kind_to_type(
     case EcsOpPushArray:
     case EcsOpPushVector:
     case EcsOpPushMap:
+    case EcsOpPushValue:
     case EcsOpOpaqueValue:
     case EcsOpOpaqueStruct:
     case EcsOpOpaqueArray:
@@ -221,6 +222,7 @@ const char* flecs_meta_op_kind_str(
     case EcsOpPushArray: return "PushArray";
     case EcsOpPushVector: return "PushVector";
     case EcsOpPushMap: return "PushMap";
+    case EcsOpPushValue: return "PushValue";
     case EcsOpOpaqueValue: return "OpaqueValue";
     case EcsOpOpaqueStruct: return "OpaqueStruct";
     case EcsOpOpaqueArray: return "OpaqueArray";
@@ -276,6 +278,31 @@ int flecs_value_blit_u64(
 
     *out = 0;
     ecs_os_memcpy(out, value->ptr, comp->size);
+
+    return 0;
+}
+
+int flecs_meta_value_type_str(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_strbuf_t *str)
+{
+    ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const char *symbol = ecs_get_symbol(world, type);
+    if (symbol) {
+        ecs_strbuf_appendstr(str, symbol);
+        return 0;
+    }
+
+    char *path = ecs_get_path(world, type);
+    if (!path) {
+        ecs_err("cannot serialize value type without name");
+        return -1;
+    }
+
+    ecs_strbuf_appendstr(str, path);
+    ecs_os_free(path);
 
     return 0;
 }
@@ -446,8 +473,7 @@ int flecs_meta_find_constant(
     return -1;
 }
 
-static
-int flecs_meta_add_bitmask_constant(
+static int flecs_meta_add_bitmask_constant(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_map_t *constants,

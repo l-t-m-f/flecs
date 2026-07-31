@@ -2899,7 +2899,7 @@ void Deserialize_discover_type_int(void) {
     test_uint(v.type, ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(uint64_t*)v.ptr, 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2914,7 +2914,7 @@ void Deserialize_discover_type_negative_int(void) {
     test_uint(v.type, ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, -10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2929,7 +2929,7 @@ void Deserialize_discover_type_float(void) {
     test_uint(v.type, ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2944,7 +2944,7 @@ void Deserialize_discover_type_negative_float(void) {
     test_uint(v.type, ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, -10.5);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2959,7 +2959,7 @@ void Deserialize_discover_type_string(void) {
     test_uint(v.type, ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(ecs_string_t*)v.ptr, "foo");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2974,7 +2974,7 @@ void Deserialize_discover_type_multiline_string(void) {
     test_uint(v.type, ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(ecs_string_t*)v.ptr, "foo\nbar");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2991,7 +2991,7 @@ void Deserialize_discover_type_entity(void) {
     test_uint(v.type, ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3006,7 +3006,7 @@ void Deserialize_discover_type_bool(void) {
     test_uint(v.type, ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(ecs_bool_t*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_os_zeromem(&v);
 
@@ -3015,7 +3015,7 @@ void Deserialize_discover_type_bool(void) {
     test_uint(v.type, ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(ecs_bool_t*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3367,14 +3367,12 @@ static void String_assign(void *ptr, const char *value) {
     s->value = ecs_os_strdup(value);
 }
 
-static 
-size_t IntVec_count(const void *ptr) {
+static size_t IntVec_count(const void *ptr) {
     const IntVec *data = ptr;
     return data->count;
 }
 
-static 
-void* IntVec_ensure(void *ptr, size_t index) {
+static void* IntVec_ensure(void *ptr, size_t index) {
     IntVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3384,8 +3382,7 @@ void* IntVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void IntVec_resize(void *ptr, size_t size) {
+static void IntVec_resize(void *ptr, size_t size) {
     IntVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -3399,14 +3396,12 @@ void IntVec_resize(void *ptr, size_t size) {
     }
 }
 
-static 
-size_t StructVec_count(const void *ptr) {
+static size_t StructVec_count(const void *ptr) {
     const StructVec *data = ptr;
     return data->count;
 }
 
-static 
-void* StructVec_ensure(void *ptr, size_t index) {
+static void* StructVec_ensure(void *ptr, size_t index) {
     StructVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3417,8 +3412,7 @@ void* StructVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void StructVec_resize(void *ptr, size_t size) {
+static void StructVec_resize(void *ptr, size_t size) {
     StructVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -3432,15 +3426,13 @@ void StructVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-size_t StringVec_count(const void *ptr) {
+static size_t StringVec_count(const void *ptr) {
     const StringVec *data = ptr;
     test_assert(data != NULL);
     return data->count;
 }
 
-static 
-void* StringVec_ensure(void *ptr, size_t index) {
+static void* StringVec_ensure(void *ptr, size_t index) {
     StringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3451,8 +3443,7 @@ void* StringVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void StringVec_resize(void *ptr, size_t size) {
+static void StringVec_resize(void *ptr, size_t size) {
     StringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -3469,15 +3460,13 @@ void StringVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-size_t OpaqueStringVec_count(const void *ptr) {
+static size_t OpaqueStringVec_count(const void *ptr) {
     const OpaqueStringVec *data = ptr;
     test_assert(data != NULL);
     return data->count;
 }
 
-static 
-void* OpaqueStringVec_ensure(void *ptr, size_t index) {
+static void* OpaqueStringVec_ensure(void *ptr, size_t index) {
     OpaqueStringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3488,8 +3477,7 @@ void* OpaqueStringVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void OpaqueStringVec_resize(void *ptr, size_t size) {
+static void OpaqueStringVec_resize(void *ptr, size_t size) {
     OpaqueStringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -4688,6 +4676,410 @@ void Deserialize_vector_i32_w_key(void) {
         "[10: 20]",
         &(ecs_value_t){vec, &value}, &desc);
     test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "10", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(int64_t*)v.ptr, 10);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_negative_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "-10", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(int64_t*)v.ptr, -10);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "10.5", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_f64_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(double*)v.ptr, 10.5);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "true", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "\"Hello World\"", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "Hello World");
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "flecs.core", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, EcsFlecsCore);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "10 + 20", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(int64_t*)v.ptr, 30);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_w_type_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{u16: 10}", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_u16_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint16_t*)v.ptr, 10);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_w_type_f32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{f32: 10.5}", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_f32_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(float*)v.ptr, 10.5f);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_w_type_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{string: \"Hello World\"}",
+        &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "Hello World");
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_w_type_struct(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{T: {x: 10, y: 20}}", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    T *value = v.ptr;
+    test_int(value->x, 10);
+    test_int(value->y, 20);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_w_type_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{T: [1, 2, 3]}", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    ecs_vec_t *vec = v.ptr;
+    test_int(vec->count, 3);
+    int32_t *value = vec->array;
+    test_int(value[0], 1);
+    test_int(value[1], 2);
+    test_int(value[2], 3);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_assign_same_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "10", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)v.ptr, 10);
+
+    ptr = ecs_expr_run(world,
+        "20", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)v.ptr, 20);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_assign_different_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "\"Hello\"", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_string_t));
+    test_str(*(char**)v.ptr, "Hello");
+
+    ptr = ecs_expr_run(world,
+        "10", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)v.ptr, 10);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_value(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    S value = {{0}};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{v: 10}", &(ecs_value_t){ecs_id(S), &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(value.v.type, ecs_id(ecs_i64_t));
+    test_assert(value.v.ptr != NULL);
+    test_int(*(int64_t*)value.v.ptr, 10);
+
+    ecs_value_fini(world, &value.v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_value_w_type(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    S value = {{0}};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{v: {u16: 10}}", &(ecs_value_t){ecs_id(S), &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(value.v.type, ecs_id(ecs_u16_t));
+    test_assert(value.v.ptr != NULL);
+    test_uint(*(uint16_t*)value.v.ptr, 10);
+
+    ecs_value_fini(world, &value.v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_value_string(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    S value = {{0}};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world,
+        "{v: \"Hello World\"}", &(ecs_value_t){ecs_id(S), &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(value.v.type, ecs_id(ecs_string_t));
+    test_assert(value.v.ptr != NULL);
+    test_str(*(char**)value.v.ptr, "Hello World");
+
+    ecs_value_fini(world, &value.v);
+
+    ecs_fini(world);
+}
+
+void Deserialize_value_unknown_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_expr_run(world,
+        "{DoesNotExist: 10}", &ecs_value_ptr(ecs_value_t, &v), &desc);
+    test_assert(ptr == NULL);
+
+    test_assert(v.type == 0);
+    test_assert(v.ptr == NULL);
 
     ecs_fini(world);
 }

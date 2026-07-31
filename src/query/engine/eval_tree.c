@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range)
 {
@@ -13,8 +15,7 @@ const EcsParent* flecs_query_tree_get_parents(
     return ecs_table_get_column(range.table, parent_column - 1, range.offset);
 }
 
-static
-bool flecs_query_tree_select_tgt(
+static bool flecs_query_tree_select_tgt(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -38,8 +39,7 @@ bool flecs_query_tree_select_tgt(
     return true;
 }
 
-static
-bool flecs_query_tree_with_parent(
+static bool flecs_query_tree_with_parent(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -78,8 +78,7 @@ repeat:
     return true;
 }
 
-static
-bool flecs_query_tree_select(
+static bool flecs_query_tree_select(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -120,8 +119,7 @@ bool flecs_query_tree_select(
     return flecs_query_tree_select_tgt(op, redo, ctx);
 }
 
-static
-bool flecs_query_tree_select_any(
+static bool flecs_query_tree_select_any(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -168,8 +166,7 @@ next:
     }
 }
 
-static
-bool flecs_query_tree_select_wildcard(
+static bool flecs_query_tree_select_wildcard(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -431,8 +428,7 @@ bool flecs_query_tree_with(
     return true;
 }
 
-static
-bool flecs_query_tree_with_pre(
+static bool flecs_query_tree_with_pre(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -462,8 +458,7 @@ bool flecs_query_tree_with_pre(
     return false;
 }
 
-static
-bool flecs_query_children_select(
+static bool flecs_query_children_select(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -551,8 +546,7 @@ next:
     }
 }
 
-static
-bool flecs_query_children_with(
+static bool flecs_query_children_with(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -777,17 +771,41 @@ bool flecs_query_tree_up_post(
         op_ctx->tgt = ctx->it->sources[op->field_index];
     }
 
+    const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+
     /* Passthrough tables that own the component */
-    if (op_ctx->tgt != EcsWildcard) {
+    if (term->oper != EcsNot && op_ctx->tgt != EcsWildcard) {
         return !redo;
     }
 
     /* Shouldn't have gotten here if the table has neither ChildOf nor Parent */
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+    if (term->oper == EcsNot) {
+        if (!redo) {
+            if (!range.count) {
+                range.count = ecs_table_count(range.table);
+            }
 
-    if (term->oper == EcsOptional) {
+            op_ctx->range = range;
+            op_ctx->cur = range.offset - 1;
+        }
+
+        do {
+            op_ctx->cur ++;
+
+            if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
+                flecs_query_src_set_range(op, &op_ctx->range, ctx);
+                return false;
+            }
+
+            flecs_query_src_set_single(op, op_ctx->cur, ctx);
+        } while (self
+            ? flecs_query_self_up_with(op, false, ctx)
+            : flecs_query_up_with(op, false, ctx));
+
+        return true;
+    } else if (term->oper == EcsOptional) {
         if (!redo) {
             if (!range.count) {
                 range.count = ecs_table_count(range.table);
@@ -830,3 +848,75 @@ bool flecs_query_tree_up_post(
         }
     }
 }
+
+bool flecs_query_tree_up_not(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self)
+{
+    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_iter_t *it = ctx->it;
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+    if (!range.table) {
+        return false;
+    }
+
+    if (!(range.table->flags & EcsTableHasParent)) {
+        if (redo) {
+            return false;
+        }
+
+        bool result;
+        if (self) {
+            result = flecs_query_self_up_with(op, false, ctx);
+        } else {
+            result = flecs_query_up_with(op, false, ctx);
+        }
+
+        if (result) {
+            return false;
+        }
+
+        goto yield;
+    }
+
+    if (!redo) {
+        if (!range.count) {
+            range.count = ecs_table_count(range.table);
+        }
+
+        op_ctx->range = range;
+        op_ctx->cur = range.offset - 1;
+    }
+
+    do {
+        op_ctx->cur ++;
+
+        if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
+            flecs_query_src_set_range(op, &op_ctx->range, ctx);
+            return false;
+        }
+
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+    } while (self
+        ? flecs_query_self_up_with(op, false, ctx)
+        : flecs_query_up_with(op, false, ctx));
+
+yield: {
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        if (id) {
+            it->ids[op->field_index] = id;
+        }
+
+        it->sources[op->field_index] = 0;
+        flecs_query_it_set_tr(it, op->field_index, NULL);
+        flecs_reset_source_set_flag(it, op->field_index);
+    }
+
+    return true;
+}
+
+#endif // FLECS_QUERY_PLANS

@@ -222,8 +222,6 @@ void SystemPeriodic_on_period(void);
 void SystemPeriodic_on_period_long_delta(void);
 void SystemPeriodic_disabled(void);
 void SystemPeriodic_2_disabled(void);
-void SystemPeriodic_disabled_feature(void);
-void SystemPeriodic_disabled_nested_feature(void);
 void SystemPeriodic_two_refs(void);
 void SystemPeriodic_filter_disabled(void);
 void SystemPeriodic_match_disabled(void);
@@ -342,7 +340,6 @@ void Stats_get_entity_count(void);
 void Stats_get_pipeline_stats_w_task_system(void);
 void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
-void Stats_progress_stats_systems_w_empty_table_flag(void);
 
 // Testsuite 'Memory'
 void Memory_query_memory_no_cache(void);
@@ -454,7 +451,7 @@ void Modules_module_tag_on_namespace_on_add_2_levels(void);
 void Modules_import_monitor_2_worlds(void);
 void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
-void Modules_component_parent_becomes_module(void);
+void Modules_component_parent_does_not_become_module(void);
 void Modules_module_has_singleton(void);
 void Modules_import_w_uppercase_name(void);
 
@@ -471,6 +468,7 @@ void Http_teardown(void);
 void Http_teardown_started(void);
 void Http_teardown_stopped(void);
 void Http_stop_start(void);
+void Http_decode_plus(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
@@ -480,6 +478,11 @@ void Rest_get_cached_invalid(void);
 void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
+void Rest_call(void);
+void Rest_call_string(void);
+void Rest_call_missing_argument(void);
+void Rest_call_not_found(void);
+void Rest_entity_not_found_w_dot_sep(void);
 void Rest_tables(void);
 void Rest_components(void);
 void Rest_type_info_non_existing_entity(void);
@@ -492,12 +495,15 @@ void Rest_request_commands_no_frames(void);
 void Rest_request_commands_no_commands(void);
 void Rest_request_commands_garbage_collect(void);
 void Rest_script_error(void);
+void Rest_script_error_new_script_deferred(void);
 void Rest_script_update(void);
 void Rest_script_update_w_body(void);
 void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
 void Rest_escape_backslash(void);
+void Rest_entity_name_w_spaces(void);
+void Rest_query_w_spaces(void);
 void Rest_request_small_buffer_plus_one(void);
 void Rest_request_ending_in_pct(void);
 void Rest_request_ending_in_2_pct(void);
@@ -1426,14 +1432,6 @@ bake_test_case SystemPeriodic_testcases[] = {
         SystemPeriodic_2_disabled
     },
     {
-        "disabled_feature",
-        SystemPeriodic_disabled_feature
-    },
-    {
-        "disabled_nested_feature",
-        SystemPeriodic_disabled_nested_feature
-    },
-    {
         "two_refs",
         SystemPeriodic_two_refs
     },
@@ -1851,10 +1849,6 @@ bake_test_case Stats_testcases[] = {
     {
         "progress_stats_systems",
         Stats_progress_stats_systems
-    },
-    {
-        "progress_stats_systems_w_empty_table_flag",
-        Stats_progress_stats_systems_w_empty_table_flag
     }
 };
 
@@ -2260,8 +2254,8 @@ bake_test_case Modules_testcases[] = {
         Modules_import_2_worlds
     },
     {
-        "component_parent_becomes_module",
-        Modules_component_parent_becomes_module
+        "component_parent_does_not_become_module",
+        Modules_component_parent_does_not_become_module
     },
     {
         "module_has_singleton",
@@ -2316,6 +2310,10 @@ bake_test_case Http_testcases[] = {
     {
         "stop_start",
         Http_stop_start
+    },
+    {
+        "decode_plus",
+        Http_decode_plus
     }
 };
 
@@ -2347,6 +2345,26 @@ bake_test_case Rest_testcases[] = {
     {
         "named_query",
         Rest_named_query
+    },
+    {
+        "call",
+        Rest_call
+    },
+    {
+        "call_string",
+        Rest_call_string
+    },
+    {
+        "call_missing_argument",
+        Rest_call_missing_argument
+    },
+    {
+        "call_not_found",
+        Rest_call_not_found
+    },
+    {
+        "entity_not_found_w_dot_sep",
+        Rest_entity_not_found_w_dot_sep
     },
     {
         "tables",
@@ -2397,6 +2415,10 @@ bake_test_case Rest_testcases[] = {
         Rest_script_error
     },
     {
+        "script_error_new_script_deferred",
+        Rest_script_error_new_script_deferred
+    },
+    {
         "script_update",
         Rest_script_update
     },
@@ -2419,6 +2441,14 @@ bake_test_case Rest_testcases[] = {
     {
         "escape_backslash",
         Rest_escape_backslash
+    },
+    {
+        "entity_name_w_spaces",
+        Rest_entity_name_w_spaces
+    },
+    {
+        "query_w_spaces",
+        Rest_query_w_spaces
     },
     {
         "request_small_buffer_plus_one",
@@ -2800,7 +2830,7 @@ static bake_test_suite suites[] = {
         "SystemPeriodic",
         NULL,
         NULL,
-        48,
+        46,
         SystemPeriodic_testcases
     },
     {
@@ -2863,7 +2893,7 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        13,
+        12,
         Stats_testcases
     },
     {
@@ -2916,14 +2946,14 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        4,
+        5,
         Http_testcases
     },
     {
         "Rest",
         NULL,
         NULL,
-        36,
+        44,
         Rest_testcases
     },
     {

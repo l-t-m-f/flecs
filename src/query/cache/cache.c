@@ -131,6 +131,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Is cache trivial? */
 bool flecs_query_cache_is_trivial(
     const ecs_query_cache_t *cache)
@@ -152,8 +154,7 @@ ecs_size_t flecs_query_cache_elem_size(
  * for the ecs_query_desc_t::group_by field but does not provide a 
  * group_by_callback, this function will be automatically used. It will cause
  * the query cache to be grouped by relationship target. */
-static
-uint64_t flecs_query_cache_default_group_by(
+static uint64_t flecs_query_cache_default_group_by(
     ecs_world_t *world, 
     ecs_table_t *table, 
     ecs_id_t id, 
@@ -174,8 +175,7 @@ uint64_t flecs_query_cache_default_group_by(
 
 /* The group_by function that's used for the cascade feature. Groups tables by
  * hierarchy depth, resulting in breadth-first iteration. */
-static
-uint64_t flecs_query_cache_group_by_cascade(
+static uint64_t flecs_query_cache_group_by_cascade(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -189,8 +189,7 @@ uint64_t flecs_query_cache_group_by_cascade(
 }
 
 /* Initialize cache with matching tables. */
-static
-void flecs_query_cache_match_tables(
+static void flecs_query_cache_match_tables(
     ecs_world_t *world,
     ecs_query_cache_t *cache)
 {
@@ -206,8 +205,7 @@ void flecs_query_cache_match_tables(
 }
 
 /* Match new table with cache. */
-static
-bool flecs_query_cache_match_table(
+static bool flecs_query_cache_match_table(
     ecs_world_t *world,
     ecs_query_cache_t *cache,
     ecs_table_t *table)
@@ -232,7 +230,8 @@ bool flecs_query_cache_match_table(
      * wildcard query, a table can match multiple times. */
     ecs_iter_t it = flecs_query_iter(world, q);
     it.flags |= EcsIterNoData;
-    ecs_iter_set_var_as_table(&it, 0, table);
+    ecs_table_range_t range = { .table = table };
+    ecs_iter_set_var_as_range(&it, 0, &range);
 
     if (!ecs_query_next(&it)) {
         /* Table doesn't match */
@@ -256,8 +255,7 @@ bool flecs_query_cache_match_table(
 /* Iterate component monitors for cache. Each field that could potentially cause
  * up traversal will create a monitor. Component monitors are registered with 
  * the world and are used to determine whether a rematch is necessary. */
-static
-void flecs_query_cache_for_each_component_monitor(
+static void flecs_query_cache_for_each_component_monitor(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_query_cache_t *cache,
@@ -289,8 +287,7 @@ void flecs_query_cache_for_each_component_monitor(
 }
 
 /* Iterate over terms in query to initialize necessary bookkeeping. */
-static
-int flecs_query_cache_process_query(
+static int flecs_query_cache_process_query(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_query_cache_t *cache)
@@ -327,8 +324,7 @@ int flecs_query_cache_process_query(
 /* -- Private API -- */
 
 /* Do bookkeeping after enabling order_by */
-static
-int flecs_query_cache_order_by(
+static int flecs_query_cache_order_by(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_entity_t order_by,
@@ -383,8 +379,7 @@ error:
 }
 
 /* Do bookkeeping after enabling group_by */
-static
-void flecs_query_cache_group_by(
+static void flecs_query_cache_group_by(
     ecs_query_cache_t *cache,
     ecs_entity_t sort_component,
     ecs_group_by_action_t group_by)
@@ -409,8 +404,7 @@ error:
 
 /* Callback for the observer that is subscribed to table events. This function
  * is the entry point for matching/unmatching new tables with the query. */
-static
-void flecs_query_cache_on_event(
+static void flecs_query_cache_on_event(
     ecs_iter_t *it)
 {
     /* Because this is the observer::run callback, checking if this event is
@@ -472,8 +466,7 @@ void flecs_query_cache_on_event(
 /* Create query-specific allocators. The reason these allocators are 
  * specific to the query is because they depend on the number of terms the
  * query has. */
-static
-void flecs_query_cache_allocators_init(
+static void flecs_query_cache_allocators_init(
     ecs_query_cache_t *cache)
 {
     int32_t field_count = cache->query->field_count;
@@ -490,8 +483,7 @@ void flecs_query_cache_allocators_init(
 }
 
 /* Free query-specific allocators. */
-static
-void flecs_query_cache_allocators_fini(
+static void flecs_query_cache_allocators_fini(
     ecs_query_cache_t *cache)
 {
     int32_t field_count = cache->query->field_count;
@@ -599,7 +591,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_observer_desc_t observer_desc = { .query = desc };
     observer_desc.query.flags |= EcsQueryNested;
 
-    ecs_flags32_t query_flags = const_desc->flags | world->default_query_flags;
+    ecs_flags32_t query_flags = const_desc->flags;
     desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly | EcsQueryNested;
 
     /* order_by is not compatible with matching empty tables, as it causes
@@ -774,3 +766,5 @@ ecs_query_cache_t* flecs_query_cache_init(
 error:
     return NULL;
 }
+
+#endif

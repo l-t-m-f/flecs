@@ -21,6 +21,10 @@ This manual contains a full overview of the query features available in Flecs. S
 
 - The Flecs REST API has a query endpoint which can be used to build remote game servers.
 
+Query features are configurable with two addons that are enabled by default:
+ - `FLECS_CACHED_QUERIES`: aforementioned cached query support
+ - `FLECS_QUERY_PLANS`: advanced query features such as operators, relationships, variables
+
 ## Definitions
 
 | Name         | Description |
@@ -89,11 +93,14 @@ Ad-hoc queries are often necessary when a game needs to find entities that match
 ### Cache kinds
 Queries can be created with a "cache kind", which specifies the caching behavior for a query. Flecs has four different caching kinds:
 
+Without `FLECS_CACHED_QUERIES`, `EcsQueryCacheAll` is unavailable and the
+Default and Auto policies produce uncached queries.
+
 | Kind    | C | C++ | Description |
 |---------|---|-----|-------------|
 | Default | `EcsQueryCacheDefault` | `flecs::QueryCacheDefault` | Behavior determined by query creation context |
 | Auto    | `EcsQueryCacheAuto`    | `flecs::QueryCacheAuto`    | Cache query terms that are cacheable |
-| All     | `EcsQueryCacheAll`     | `flecs::QueryCacheAll`     | Require that all query terms are cached |
+| All     | `EcsQueryCacheAll`     | `flecs::QueryCacheAll`     | Require that all query terms are cached (requires `FLECS_CACHED_QUERIES`) |
 | None    | `EcsQueryCacheNone`    | `flecs::QueryCacheNone`    | No caching |
 
 The following sections describe each of the kinds.
@@ -3018,6 +3025,10 @@ Position(up ContainedBy)
 ### Variables
 Query variables represent the state of a query while it is being evaluated. The most common form of state is "the entity (or table) against which the query is evaluated". While a query is evaluating an entity or table, it has to store it somewhere. In flecs, that "somewhere" is a query variable.
 
+Named variables and the variable inspection APIs require
+`FLECS_QUERY_PLANS`. Without the addon, only the implicit `$this` variable is
+available and it can only be constrained by index.
+
 Consider this query example, written down with explicit term [sources](#source):
 
 ```
@@ -3351,6 +3362,8 @@ Movement.value($this, $direction), $direction != Left
 
 ### Change Detection
 Change detection makes it possible for applications to know whether data matching a query has changed. Changes are tracked at the table level, for each component in the table. While this is less granular than per entity tracking, the mechanism has minimal overhead, and can be used to skip entities in bulk.
+
+Change detection requires the `FLECS_CACHED_QUERIES` addon.
 
 Change detection works by storing a list of counters on tracked tables, where each counter tracks changes for a component in the table. When a component in the table changes, the corresponding counter is increased. An additional counter is stored for changes that add or remove entities to the table. Queries with change detection store a copy of the list of counters for each table in the cache, and compare counters to detect changes. To reduce overhead, counters are only tracked for tables matched with queries that use change detection.
 
@@ -3697,6 +3710,8 @@ let q = world
 
 ### Grouping
 Grouping is the ability of queries to assign an id ("group id") to a set of tables. Grouped tables are iterated together, as they are stored together in the query cache. Additionally, groups in the query cache are sorted by group id, which guarantees that tables with a lower group id are iterated after tables with a higher group id. Grouping is only supported for cached queries.
+
+Grouping requires the `FLECS_CACHED_QUERIES` addon.
 
 Group ids are local to a query, and as a result queries with grouping do not modify the tables they match with.
 

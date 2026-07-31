@@ -171,6 +171,8 @@ void Validator_validator_2_var_src_terms_match_this(void);
 void Validator_validator_2_terms_1_var_src_match_this(void);
 void Validator_validator_1_tag_term_this_src_match_this(void);
 void Validator_exceed_max_var_count(void);
+void Validator_query_for_relationship_trait_as_component(void);
+void Validator_query_for_relationship_trait_as_component_2_terms(void);
 void Validator_from_op_w_pair(void);
 
 // Testsuite 'Parser'
@@ -712,7 +714,6 @@ void Basic_match_new_empty_w_ref(void);
 void Basic_match_empty_w_order_by(void);
 void Basic_match_new_empty_w_order_by(void);
 void Basic_match_empty_w_bitset(void);
-void Basic_default_query_flags(void);
 void Basic_ref_fields_this(void);
 void Basic_ref_fields_static_src(void);
 void Basic_ref_fields_variable_src(void);
@@ -2414,6 +2415,7 @@ void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void);
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
 void NonFragmentingChildOf_optional_up_set_var_2nd_child(void);
+void NonFragmentingChildOf_self_up_never_populated_table(void);
 void NonFragmentingChildOf_0_src_childof_parent(void);
 void NonFragmentingChildOf_0_src_childof_0(void);
 void NonFragmentingChildOf_fixed_src_childof_0(void);
@@ -2732,6 +2734,8 @@ void NonFragmentingChildOf_this_set_childof_w_prefab(void);
 void NonFragmentingChildOf_this_set_childof_w_prefab_match_prefab(void);
 void NonFragmentingChildOf_query_parent_in_on_add_parent_observer(void);
 void NonFragmentingChildOf_up_query_cache_stale_table_after_shrink(void);
+void NonFragmentingChildOf_not_up_cached_rematch_after_remove_from_parent(void);
+void NonFragmentingChildOf_not_up_uncached_mixed_parents(void);
 void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void);
 
 // Testsuite 'OrderBy'
@@ -3530,6 +3534,14 @@ bake_test_case Validator_testcases[] = {
     {
         "exceed_max_var_count",
         Validator_exceed_max_var_count
+    },
+    {
+        "query_for_relationship_trait_as_component",
+        Validator_query_for_relationship_trait_as_component
+    },
+    {
+        "query_for_relationship_trait_as_component_2_terms",
+        Validator_query_for_relationship_trait_as_component_2_terms
     },
     {
         "from_op_w_pair",
@@ -5671,10 +5683,6 @@ bake_test_case Basic_testcases[] = {
     {
         "match_empty_w_bitset",
         Basic_match_empty_w_bitset
-    },
-    {
-        "default_query_flags",
-        Basic_default_query_flags
     },
     {
         "ref_fields_this",
@@ -12347,6 +12355,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_optional_up_set_var_2nd_child
     },
     {
+        "self_up_never_populated_table",
+        NonFragmentingChildOf_self_up_never_populated_table
+    },
+    {
         "0_src_childof_parent",
         NonFragmentingChildOf_0_src_childof_parent
     },
@@ -13619,6 +13631,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_up_query_cache_stale_table_after_shrink
     },
     {
+        "not_up_cached_rematch_after_remove_from_parent",
+        NonFragmentingChildOf_not_up_cached_rematch_after_remove_from_parent
+    },
+    {
+        "not_up_uncached_mixed_parents",
+        NonFragmentingChildOf_not_up_uncached_mixed_parents
+    },
+    {
         "this_src_childof_var_doesnt_match_root",
         NonFragmentingChildOf_this_src_childof_var_doesnt_match_root
     }
@@ -14270,7 +14290,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        163,
+        165,
         Validator_testcases
     },
     {
@@ -14293,7 +14313,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        241,
+        240,
         Basic_testcases,
         1,
         Basic_params
@@ -14441,7 +14461,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        320,
+        323,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

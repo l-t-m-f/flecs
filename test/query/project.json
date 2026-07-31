@@ -176,6 +176,8 @@
                 "validator_2_terms_1_var_src_match_this",
                 "validator_1_tag_term_this_src_match_this",
                 "exceed_max_var_count",
+                "query_for_relationship_trait_as_component",
+                "query_for_relationship_trait_as_component_2_terms",
                 "from_op_w_pair"
             ]
         }, {
@@ -729,7 +731,6 @@
                 "match_empty_w_order_by",
                 "match_new_empty_w_order_by",
                 "match_empty_w_bitset",
-                "default_query_flags",
                 "ref_fields_this",
                 "ref_fields_static_src",
                 "ref_fields_variable_src",
@@ -2502,6 +2503,7 @@
             },
             "testcases": [
                 "optional_up_set_var_2nd_child",
+                "self_up_never_populated_table",
                 "0_src_childof_parent",
                 "0_src_childof_0",
                 "fixed_src_childof_0",
@@ -2820,6 +2822,8 @@
                 "this_set_childof_w_prefab_match_prefab",
                 "query_parent_in_on_add_parent_observer",
                 "up_query_cache_stale_table_after_shrink",
+                "not_up_cached_rematch_after_remove_from_parent",
+                "not_up_uncached_mixed_parents",
                 "this_src_childof_var_doesnt_match_root"
             ]
         }, {

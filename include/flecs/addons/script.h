@@ -622,7 +622,7 @@ typedef struct ecs_expr_eval_desc_t {
  * expression, the expression will be cast to the value.
  *
  * If the provided value for value.ptr is NULL, the value must be freed with 
- * ecs_value_free() afterwards.
+ * ecs_ptr_free() afterwards.
  *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
@@ -659,7 +659,7 @@ ecs_script_t* ecs_expr_parse(
  * cast to the value.
  * 
  * If the provided value for value.ptr is NULL, the value must be freed with 
- * ecs_value_free() afterwards.
+ * ecs_ptr_free() afterwards.
  * 
  * @param script The script containing the expression.
  * @param value The value in which to store the expression result.
@@ -727,15 +727,26 @@ ecs_entity_t ecs_const_var_init(
 
 /** Return the value for a const variable.
  * This returns the value for a const variable that is created either with
- * ecs_const_var_init(), or in a script with "export const v: ...".
+ * ecs_const_var_init(), or in a script with "export const v = ...".
  *
  * @param world The world.
- * @param var The variable associated with the entity.
+ * @param var The const variable.
  * @return The value of the const variable.
  */
 FLECS_API
 ecs_value_t ecs_const_var_get(
     const ecs_world_t *world,
+    ecs_entity_t var);
+
+/** Mark const var as modified.
+ * This will notify OnSet observers.
+ * 
+ * @param world The world.
+ * @param var The const variable.
+ */
+FLECS_API
+void ecs_const_var_modified(
+    ecs_world_t *world,
     ecs_entity_t var);
 
 /* Functions */
@@ -777,15 +788,15 @@ typedef struct ecs_function_desc_t {
      * 
      * This allows for statements like:
      * @code
-     * const a = Rgb: {100, 150, 250}
-     * const b = Rgb: {10, 10, 10}
+     * const a: Rgb = {100, 150, 250}
+     * const b: Rgb = {10, 10, 10}
      * const r = lerp(a, b, 0.1)
      * @endcode
      * 
      * which would otherwise have to be written out as:
      * 
      * @code
-     * const r = Rgb: {
+     * const r: Rgb = {
      *   lerp(a.r, b.r, 0.1),
      *   lerp(a.g, b.g, 0.1),
      *   lerp(a.b, b.b, 0.1)
@@ -832,6 +843,14 @@ ecs_entity_t ecs_function_init(
 #define ecs_function(world, ...)\
     ecs_function_init(world, &(ecs_function_desc_t)__VA_ARGS__)
 
+FLECS_API
+int ecs_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
+
 /** Create new method. 
  * This operation creates a new method that can be called from a script. A 
  * method is like a function, except that it can be called on every instance of
@@ -851,6 +870,15 @@ ecs_entity_t ecs_method_init(
 
 #define ecs_method(world, ...)\
     ecs_method_init(world, &(ecs_function_desc_t)__VA_ARGS__)
+
+FLECS_API
+int ecs_method_call(
+    ecs_world_t *world,
+    ecs_entity_t method,
+    const ecs_value_t *instance,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
 
 
 /* Value serialization */

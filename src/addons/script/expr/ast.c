@@ -11,8 +11,7 @@
 #define flecs_expr_ast_new(parser, T, kind)\
     (T*)flecs_expr_ast_new_(parser, ECS_SIZEOF(T), kind)
 
-static
-void* flecs_expr_ast_new_(
+static void* flecs_expr_ast_new_(
     ecs_parser_t *parser,
     ecs_size_t size, 
     ecs_expr_node_kind_t kind)
@@ -176,6 +175,8 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     ecs_vec_init_t(&parser->script->allocator, &result->fragments, char*, 0);
     ecs_vec_init_t(&parser->script->allocator, &result->expressions, 
         ecs_expr_node_t*, 0);
+    ecs_vec_init_t(&parser->script->allocator, &result->formats,
+        ecs_expr_format_t, 0);
 
     return result;
 }
@@ -267,13 +268,17 @@ ecs_expr_new_t* flecs_expr_new(
     return result;
 }
 
-static
-bool flecs_expr_explicit_cast_allowed(
+static bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
     ecs_entity_t to)
 {
     if (from == to) {
+        return true;
+    }
+
+    /* Any type can be cast to and from a value */
+    if (to == ecs_id(ecs_value_t) || from == ecs_id(ecs_value_t)) {
         return true;
     }
 
